@@ -1,0 +1,3279 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="initial-scale=0.5">
+
+		<style>
+      * {
+	margin: 0px;
+	padding: 0px;
+}
+
+html, body {
+	overflow: hidden;
+}
+
+label {
+	display: inline-block;
+	font-weight: bold;
+	padding-left: 12px;
+	/*width: 80px;*/  /* 120px */
+}
+
+label_normal {
+	display: inline-block;
+	font-weight: normal;
+	padding-left: 12px;
+}
+a1 {
+	display: inline-block;
+	margin: 3px 8px;
+	padding: 3px 4px;
+	border: 1px solid #888;
+	border-radius: 4px;
+	box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+	cursor: default;
+	color: #444;
+	text-decoration: none;
+}
+a1:hover {
+	box-shadow: 1px 1px 1px rgba(0,0,0,0.8);	
+	background-color: #eee;
+	color: black;
+}
+
+a2 {
+	display: inline-block;
+	margin: 3px 8px;
+	padding: 3px 40px;
+	border: 1px solid #888;
+	border-radius: 4px;
+	box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+	cursor: default;
+
+	background-color: #eee;
+	color: #444;
+	text-decoration: none;
+}
+a2:hover {
+	box-shadow: 1px 1px 1px rgba(0,0,0,0.8);
+	background-color: #ddd;
+	color: black;
+}
+
+input {
+	margin: 3px 6px;
+	vertical-align:middle;
+}
+
+.controlPanel {
+	border-top: 1px solid rgba(0,0,0,0.5);
+	padding: 5px 16px;
+}
+    </style>  
+      
+        <title>Fourier 3D interactive</title>
+    </head>
+    <body>
+        <div id="main"></div>
+		<script>
+var Jazyk_cesky = 1;
+var Jazyk_anglicky = 2;
+var jazyk = Jazyk_anglicky;
+var tutorialOn = false;
+var tutorialLesson = 0;
+		</script>
+        <script charset="utf-8">
+          !(function (e) {
+  function t(n) {
+    if (a[n]) return a[n].exports;
+    var i = (a[n] = { exports: {}, id: n, loaded: !1 });
+    return e[n].call(i.exports, i, i.exports, t), (i.loaded = !0), i.exports;
+  }
+  var a = {};
+  return (t.m = e), (t.c = a), (t.p = ""), t(0);
+})([
+  function (e, t, a) {
+    "use strict";
+    function n(e) {
+      return e && e.__esModule ? e : { default: e };
+    }
+    function i() {
+      tn &&
+        ((Ra = new tn()),
+        (an = Ra.sampleRate),
+        (lblFs.textContent = "fs: " + an + " Hz"),
+        (qa = Ra.createOscillator()),
+        (Ze = !!qa),
+        (Ea = Ra.createGain()),
+        Ea.connect(Ra.destination),
+        qa.connect(Ea),
+        Ea.gain.setValueAtTime(-1, Ra.currentTime),
+        (Be = !1)),
+        Ze &&
+          ((Ve = !1),
+          c(),
+          Ea.gain.linearRampToValueAtTime(1, Ra.currentTime + qe),
+          qa.connect(Ra.destination),
+          qa.start());
+    }
+    function l() {
+      Ze &&
+        (Ne
+          ? ((Be = !1),
+            Ea.gain.setValueAtTime(-1, Ra.currentTime),
+            f(),
+            Ea.gain.linearRampToValueAtTime(1, Ra.currentTime + qe))
+          : (Be ||
+              (Ea.gain.setValueAtTime(1, Ra.currentTime),
+              Ea.gain.linearRampToValueAtTime(-1, Ra.currentTime + Ee)),
+            (Be = !0)));
+    }
+    function r(e) {
+      return 0 == e ? 0 : Math.pow(10, (rn * (e - ln)) / 20);
+    }
+    function o(e) {
+      if (e < 1e-10) return 0;
+      var t = Math.round((20 * Math.log10(e)) / rn + ln);
+      return t < 0 && (t = 0), t > ln && (t = ln), t;
+    }
+    function s(e) {
+      return 440 * Math.pow(2, (1 * (e - 30)) / 12);
+    }
+    function f() {
+      c();
+    }
+    function c() {
+      if (gn) return void ee();
+      if (nn * (Et - 1) >= an / 2)
+        return (
+          (Et = Math.floor(an / 2.000001 / nn + 1)),
+          (La = Et),
+          (lblHarmonicke.textContent = Et - 1),
+          (harmonicSlider.value = Et),
+          void v()
+        );
+      for (var e = 1.2, t = !1, a = 0, n = 0.9999999999, i = 0; i < bt; i++)
+        Ge && De
+          ? (Mt[2 * i] = (Tt[i] / bt / e) * on)
+          : (Mt[2 * i] = (St[i] / bt / e) * on),
+          (Mt[2 * i + 1] = 0),
+          Mt[2 * i] * bt > n
+            ? ((t = !0), (a = Math.max(a, Mt[2 * i] * bt)))
+            : Mt[2 * i] * bt < -n &&
+              ((t = !0), (a = Math.max(a, -Mt[2 * i] * bt)));
+      if (t) {
+        (on = (on / a) * n * n), (volumeSlider.value = o(on));
+        for (var l = 0; l < bt; l++)
+          Ge
+            ? (Mt[2 * l] = (Tt[l] / bt / e) * on)
+            : (Mt[2 * l] = (St[l] / bt / e) * on),
+            (Mt[2 * l + 1] = 0);
+      }
+      Ct.transform(Mt, !1), (qa.frequency.value = nn);
+      var r = new Float32Array(Et),
+        s = new Float32Array(Et);
+      (r[0] = 0), (s[0] = 0);
+      for (var f = 1; f < Et; f++) (r[f] = Mt[2 * f]), (s[f] = Mt[2 * f + 1]);
+      var c = Ra.createPeriodicWave(r, s, { disableNormalization: !0 });
+      qa.setPeriodicWave(c);
+    }
+    function u(e, t, a) {
+      e.beginPath(), e.moveTo(t[0], t[1]), e.lineTo(a[0], a[1]), e.stroke();
+    }
+    function y() {
+      (Wt = Le.default.getWidth()),
+        (Ft = Le.default.getHeight()),
+        sn ||
+          ((Za = document.createElement("canvas")),
+          (Za.width = Wt),
+          (Za.height = Ft),
+          (sn = !0),
+          (Dt = Wt),
+          (Ht = Ft)),
+        (Dt == Wt && Ht == Ft) ||
+          ((Dt = Wt), (Ht = Ft), (Za.width = Wt), (Za.height = Ft));
+      var e = Za.getContext("2d");
+      if (
+        ((e.fillStyle = et),
+        e.beginPath(),
+        e.rect(0, 0, Wt, Ft),
+        e.fill(),
+        Ot !== !1)
+      ) {
+        var t,
+          a,
+          n,
+          i,
+          l = e.getLineDash();
+        e.setLineDash([3, 3]), (e.strokeStyle = lt);
+        for (var r = 0; r <= Vt; r++)
+          (t = I(($t / Vt) * r, 0, 0)),
+            (a = I(($t / Vt) * r, $t * (Zt / qt), 0)),
+            u(e, [t.X, t.Y], [a.X, a.Y]);
+        e.setLineDash(l);
+        var o = I(0, 0, 0),
+          s = I($t, 0, 0),
+          f = I(0, $t / qt, 0),
+          c = I($t, $t / qt, 0),
+          y = I(0, $t, 0);
+        tutorialOn && 14 == tutorialLesson && (y = I(0, $t + ea, 0)),
+          (e.strokeStyle = rt),
+          u(e, [o.X, o.Y], [s.X, s.Y]),
+          u(e, [f.X, f.Y], [c.X, c.Y]),
+          u(e, [f.X, f.Y], [y.X, y.Y]);
+        var v, p, z, Y, g, X, m, b, w, P;
+        if (
+          ((v = I(0, 0, ta * na)),
+          (p = I($t, 0, ta * na)),
+          (z = I($t, 0, -ta * na)),
+          (Y = I(0, 0, -ta * na)),
+          (g = I($t / 2, 0, ta * na)),
+          (X = I($t / 2, 0, -ta * na)),
+          (m = I($t / 4, 0, ta * na)),
+          (b = I($t / 4, 0, -ta * na)),
+          (w = I((3 * $t) / 4, 0, ta * na)),
+          (P = I((3 * $t) / 4, 0, -ta * na)),
+          (fa[0] = v.X),
+          (ca[0] = v.Y),
+          (fa[1] = p.X),
+          (ca[1] = p.Y),
+          (fa[2] = z.X),
+          (ca[2] = z.Y),
+          (fa[3] = Y.X),
+          (ca[3] = Y.Y),
+          da)
+        ) {
+          (e.strokeStyle = at),
+            u(e, [v.X, v.Y], [p.X, p.Y]),
+            u(e, [p.X, p.Y], [z.X, z.Y]),
+            u(e, [z.X, z.Y], [Y.X, Y.Y]),
+            u(e, [Y.X, Y.Y], [v.X, v.Y]);
+          var _ = e.getLineDash();
+          e.setLineDash([3, 3]),
+            u(e, [g.X, g.Y], [X.X, X.Y]),
+            u(e, [m.X, m.Y], [b.X, b.Y]),
+            u(e, [w.X, w.Y], [P.X, P.Y]),
+            e.setLineDash(_);
+        }
+        var j = e.lineCap;
+        e.lineCap = "round";
+        for (var J = $t / bt / Vt, T = 1; T <= Zt; T++) {
+          1 != T &&
+            ((t = I(0, (T / qt) * $t, 0)),
+            (a = I((bt * Vt - 1) * J, (T / qt) * $t, 0)),
+            (e.strokeStyle = rt),
+            u(e, [t.X, t.Y], [a.X, a.Y]));
+          var x;
+          (x =
+            T == Zt && Et > qt && (!tutorialOn || 14 != tutorialLesson)
+              ? Ja
+              : _a[T - 1]),
+            (e.strokeStyle = it),
+            (t = I(0, 0, 0));
+          for (var A = 0; A < Vt; A++)
+            for (var L = 0; L < bt; L++)
+              0 === A &&
+                0 === L &&
+                (t = I((A * bt + L) * J, (T / qt) * $t, ta * x[L])),
+                (a = I((A * bt + L) * J, (T / qt) * $t, ta * x[L])),
+                u(e, [t.X, t.Y], [a.X, a.Y]),
+                (t = a),
+                L % (bt / Gt) === 0 &&
+                  ((n = I((A * bt + L) * J, (T / qt) * $t, 0)),
+                  u(e, [n.X, n.Y], [a.X, a.Y]));
+        }
+        (e.lineCap = j),
+          (e = h(e)),
+          (t = I(0, 0, 0)),
+          (e.strokeStyle = nt),
+          (j = e.lineCap);
+        var C = e.lineWidth;
+        (e.lineCap = "round"), (e.lineWidth = Ut);
+        for (var W = 0; W < Vt; W++)
+          for (var F = 0; F < bt; F++)
+            0 !== W || 0 !== F
+              ? ((a = I((W * bt + F) * J, 0, ta * Pa[F])),
+                u(e, [t.X, t.Y], [a.X, a.Y]),
+                (t = a))
+              : (t = I((W * bt + F) * J, 0, ta * Pa[F]));
+        (e.lineCap = j),
+          (e.lineWidth = C),
+          (e.strokeStyle = ot),
+          (e.fillStyle = ot),
+          (e.font = Qe),
+          e.fillText("Ć©", o.X - st * ea, o.Y + ft * ea),
+          (t = I(0, 0, -0.6 * ea)),
+          (a = I(1.5 * ea, 0, -0.6 * ea)),
+          (n = I(1.5 * ea - 0.2 * ea, 0, -0.6 * ea - 0.05 * ea)),
+          (i = I(1.5 * ea - 0.3 * ea, 0, -0.6 * ea + 0.05 * ea)),
+          (e.strokeStyle = ot),
+          u(e, [t.X, t.Y], [a.X, a.Y]),
+          u(e, [a.X, a.Y], [n.X, n.Y]),
+          u(e, [a.X, a.Y], [i.X, i.Y]),
+          e.save(),
+          e.translate(i.X, i.Y),
+          e.rotate((-15 / 180) * Math.PI);
+        var D = "";
+        jazyk == Jazyk_anglicky
+          ? (D = "Time (sec)")
+          : jazyk == Jazyk_cesky && (D = "ÄŚas (s)"),
+          e.fillText(D, -100 * ea, -20 * ea),
+          e.restore(),
+          (t = I(0, 0, -0.6 * ea)),
+          (a = I(0, 1.5 * ea, -0.6 * ea)),
+          (n = I(-0.1 * ea, 1.5 * ea - 0.3 * ea, -0.6 * ea)),
+          (i = I(0.1 * ea, 1.5 * ea - 0.2 * ea, -0.6 * ea)),
+          (e.strokeStyle = ot),
+          u(e, [t.X, t.Y], [a.X, a.Y]),
+          u(e, [a.X, a.Y], [n.X, n.Y]),
+          u(e, [a.X, a.Y], [i.X, i.Y]),
+          e.save(),
+          e.translate(i.X, i.Y),
+          e.rotate((15 / 180) * Math.PI);
+        var H = "";
+        jazyk == Jazyk_anglicky
+          ? (H = "Frequency (Hz)")
+          : jazyk == Jazyk_cesky && (H = "Frekvence (Hz)"),
+          e.fillText(H, -150 * ea, -30 * ea),
+          e.restore(),
+          (t = I(0, $t + ea, 0)),
+          (a = I(0, $t + ea, 1.2 * ea)),
+          (n = I(0 - 0.05 * ea, $t + ea, 1.2 * ea - 0.2 * ea)),
+          (i = I(0 + 0.05 * ea, $t + ea, 1.2 * ea - 0.2 * ea)),
+          (e.strokeStyle = ot),
+          u(e, [t.X, t.Y], [a.X, a.Y]),
+          u(e, [a.X, a.Y], [n.X, n.Y]),
+          u(e, [a.X, a.Y], [i.X, i.Y]);
+        var O = "";
+        jazyk == Jazyk_anglicky
+          ? (O = "Magnitude")
+          : jazyk == Jazyk_cesky && (O = "Amplituda"),
+          e.fillText(O, i.X + 20 * ea, i.Y + 30 * ea),
+          (t = I(0, $t + ea, 0)),
+          (a = I(-1.5 * ea, $t + ea, 0)),
+          (n = I(-1.5 * ea + 0.2 * ea, $t + ea - 0.1 * ea, 0)),
+          (i = I(-1.5 * ea + 0.3 * ea, $t + ea + 0.1 * ea, 0)),
+          (e.strokeStyle = ot),
+          u(e, [t.X, t.Y], [a.X, a.Y]),
+          u(e, [a.X, a.Y], [n.X, n.Y]),
+          u(e, [a.X, a.Y], [i.X, i.Y]),
+          e.save(),
+          e.translate(i.X, i.Y),
+          e.rotate((-15 / 180) * Math.PI);
+        var R = "";
+        if (
+          (jazyk == Jazyk_anglicky
+            ? (R = "Phase (rad)")
+            : jazyk == Jazyk_cesky && (R = "FĂˇze (rad)"),
+          e.fillText(R, -50 * ea, -30 * ea),
+          e.restore(),
+          tutorialOn &&
+            ((e.font = $e),
+            De
+              ? e.fillText(Rt, o.X, Ft / 2)
+              : e.fillText(Rt, o.X - 100, Ft - 20),
+            (e.font = Qe)),
+          De &&
+            ((e = k(e)),
+            (l = e.getLineDash()),
+            e.setLineDash([3, 3]),
+            (e.strokeStyle = Xt),
+            (t = I(0, $t * (1 / Aa), 0, 2)),
+            (a = I(0, $t * (Ca / Aa), 0, 2)),
+            u(e, [t.X, t.Y], [a.X, a.Y]),
+            e.setLineDash(l),
+            (f = I(0, $t / Aa, 0, 2)),
+            (y = I(0, $t, 0, 2)),
+            (e.strokeStyle = mt),
+            u(e, [f.X, f.Y], [y.X, y.Y])),
+          De)
+        ) {
+          (l = e.getLineDash()), e.setLineDash([3, 3]), (e.strokeStyle = vt);
+          for (var q = 0; q <= Vt; q++)
+            (t = I(($t / Vt) * q, 0, 0, 3)),
+              (a = I(($t / Vt) * q, $t * (Zt / qt), 0, 3)),
+              u(e, [t.X, t.Y], [a.X, a.Y]);
+          e.setLineDash(l),
+            (o = I(0, 0, 0, 3)),
+            (s = I($t, 0, 0, 3)),
+            (f = I(0, $t / qt, 0, 3)),
+            (c = I($t, $t / qt, 0, 3)),
+            (y = I(0, $t, 0, 3)),
+            (e.strokeStyle = pt),
+            u(e, [o.X, o.Y], [s.X, s.Y]),
+            u(e, [f.X, f.Y], [c.X, c.Y]),
+            u(e, [f.X, f.Y], [y.X, y.Y]),
+            (j = e.lineCap),
+            (e.lineCap = "round"),
+            (J = $t / bt / Vt);
+          for (var E = 1; E <= Zt; E++) {
+            1 != E &&
+              ((t = I(0, (E / qt) * $t, 0, 3)),
+              (a = I((bt * Vt - 1) * J, (E / qt) * $t, 0, 3)),
+              (e.strokeStyle = pt),
+              u(e, [t.X, t.Y], [a.X, a.Y])),
+              (x = E == Zt && Et > qt ? At : xt[E - 1]),
+              (e.strokeStyle = dt),
+              (t = I(0, 0, 0, 3));
+            for (var Z = 0; Z < Vt; Z++)
+              for (var V = 0; V < bt; V++)
+                0 === Z &&
+                  0 === V &&
+                  (t = I((Z * bt + V) * J, (E / qt) * $t, ta * x[V], 3)),
+                  (a = I((Z * bt + V) * J, (E / qt) * $t, ta * x[V], 3)),
+                  u(e, [t.X, t.Y], [a.X, a.Y]),
+                  (t = a),
+                  V % (bt / Gt) === 0 &&
+                    ((n = I((Z * bt + V) * J, (E / qt) * $t, 0, 3)),
+                    u(e, [n.X, n.Y], [a.X, a.Y]));
+          }
+          (e.lineCap = j),
+            (e = d(e)),
+            (t = I(0, 0, 0, 3)),
+            (e.strokeStyle = kt),
+            (j = e.lineCap),
+            (C = e.lineWidth),
+            (e.lineCap = "round"),
+            (e.lineWidth = Ut);
+          for (var N = 0; N < Vt; N++)
+            for (var B = 0; B < bt; B++)
+              0 !== N || 0 !== B
+                ? ((a = I((N * bt + B) * J, 0, ta * Tt[B], 3)),
+                  u(e, [t.X, t.Y], [a.X, a.Y]),
+                  (t = a))
+                : (t = I((N * bt + B) * J, 0, ta * Tt[B], 3));
+          (e.lineCap = j),
+            (e.lineWidth = C),
+            (e.strokeStyle = zt),
+            (e.fillStyle = zt),
+            (e.font = Qe),
+            e.fillText("Ć©", o.X - st * ea, o.Y + ft * ea),
+            (t = I(0, 0, -0.6 * ea, 3)),
+            (a = I(1.5 * ea, 0, -0.6 * ea, 3)),
+            (n = I(1.5 * ea - 0.2 * ea, 0, -0.6 * ea - 0.05 * ea, 3)),
+            (i = I(1.5 * ea - 0.3 * ea, 0, -0.6 * ea + 0.05 * ea, 3)),
+            (e.strokeStyle = zt),
+            u(e, [t.X, t.Y], [a.X, a.Y]),
+            u(e, [a.X, a.Y], [n.X, n.Y]),
+            u(e, [a.X, a.Y], [i.X, i.Y]),
+            e.save(),
+            e.translate(i.X, i.Y),
+            e.rotate((-15 / 180) * Math.PI),
+            (D = ""),
+            jazyk == Jazyk_anglicky
+              ? (D = "Time (sec)")
+              : jazyk == Jazyk_cesky && (D = "ÄŚas (s)"),
+            e.fillText(D, -100 * ea, -20 * ea),
+            e.restore(),
+            (t = I(0, 0, -0.6 * ea, 3)),
+            (a = I(0, 1.5 * ea, -0.6 * ea, 3)),
+            (n = I(-0.1 * ea, 1.5 * ea - 0.3 * ea, -0.6 * ea, 3)),
+            (i = I(0.1 * ea, 1.5 * ea - 0.2 * ea, -0.6 * ea, 3)),
+            (e.strokeStyle = zt),
+            u(e, [t.X, t.Y], [a.X, a.Y]),
+            u(e, [a.X, a.Y], [n.X, n.Y]),
+            u(e, [a.X, a.Y], [i.X, i.Y]),
+            e.save(),
+            e.translate(i.X, i.Y),
+            e.rotate((15 / 180) * Math.PI),
+            (H = ""),
+            jazyk == Jazyk_anglicky
+              ? (H = "Frequency (Hz)")
+              : jazyk == Jazyk_cesky && (H = "Frekvence (Hz)"),
+            e.fillText(H, -150 * ea, -30 * ea),
+            e.restore(),
+            (t = I(0, $t + ea, 0, 3)),
+            (a = I(0, $t + ea, 1.2 * ea, 3)),
+            (n = I(0 - 0.05 * ea, $t + ea, 1.2 * ea - 0.2 * ea, 3)),
+            (i = I(0 + 0.05 * ea, $t + ea, 1.2 * ea - 0.2 * ea, 3)),
+            (e.strokeStyle = zt),
+            u(e, [t.X, t.Y], [a.X, a.Y]),
+            u(e, [a.X, a.Y], [n.X, n.Y]),
+            u(e, [a.X, a.Y], [i.X, i.Y]),
+            (O = ""),
+            jazyk == Jazyk_anglicky
+              ? (O = "Magnitude")
+              : jazyk == Jazyk_cesky && (O = "Amplituda"),
+            e.fillText(O, i.X + 20 * ea, i.Y + 30 * ea),
+            (t = I(0, $t + ea, 0, 3)),
+            (a = I(-1.5 * ea, $t + ea, 0, 3)),
+            (n = I(-1.5 * ea + 0.2 * ea, $t + ea - 0.1 * ea, 0, 3)),
+            (i = I(-1.5 * ea + 0.3 * ea, $t + ea + 0.1 * ea, 0, 3)),
+            (e.strokeStyle = zt),
+            u(e, [t.X, t.Y], [a.X, a.Y]),
+            u(e, [a.X, a.Y], [n.X, n.Y]),
+            u(e, [a.X, a.Y], [i.X, i.Y]),
+            e.save(),
+            e.translate(i.X, i.Y),
+            e.rotate((-15 / 180) * Math.PI),
+            (R = ""),
+            jazyk == Jazyk_anglicky
+              ? (R = "Phase (rad)")
+              : jazyk == Jazyk_cesky && (R = "FĂˇze (rad)"),
+            e.fillText(R, -50 * ea, -30 * ea),
+            e.restore();
+        }
+        if (He) {
+          for (var G = 0; G < bt; G++)
+            (Mt[2 * G] = St[G] / bt), (Mt[2 * G + 1] = 0);
+          Ct.transform(Mt, !1), (Y = I(0, 0, 0.2));
+          for (var K = 0; K < Et; K++) {
+            var U = 2 * S(Mt[2 * K], Mt[2 * K + 1]),
+              Q = M(Mt[2 * K], Mt[2 * K + 1]);
+            Q < 0 ? (Q += 2 * Math.PI) : Q >= 2 * Math.PI && (Q -= 2 * Math.PI),
+              e.fillText(
+                "a(" +
+                  K.toString() +
+                  ") = " +
+                  U.toFixed(5) +
+                  "    ph(" +
+                  K.toString() +
+                  ") = " +
+                  (Q / Math.PI).toFixed(5) +
+                  "Ď€",
+                20,
+                Y.Y + 15 * (K + 1)
+              );
+          }
+        }
+        var $ = Le.default.context;
+        $.drawImage(Za, 0, 0);
+      }
+    }
+    function h(e) {
+      var t, a, n, i, l, r, o;
+      e.font = Qe;
+      for (var s, f = 1; f <= Zt; f++) {
+        if (
+          ((s =
+            tutorialOn && 14 == tutorialLesson && f > 1
+              ? (1 << (f - 2)) + 1
+              : f),
+          (t = I(0, (f / qt) * $t, 0)),
+          !(f == Zt && Et > qt) || (tutorialOn && 14 == tutorialLesson))
+        ) {
+          if (
+            ((a = I(0, (f / qt) * $t, ta * wt[s - 1])),
+            (n = I(((-Pt[s - 1] / Math.PI) * $t) / qt, (f / qt) * $t, 0)),
+            f - 1 == ua && f - 1 != ya)
+          ) {
+            f - 1 == ya
+              ? ((e.strokeStyle = at), (e.fillStyle = at))
+              : ((e.strokeStyle = tt), (e.fillStyle = tt)),
+              e.beginPath(),
+              e.arc(n.X, n.Y, Qt / 2, 0, 2 * Math.PI),
+              e.fill();
+            var c = e.lineWidth;
+            (e.lineWidth = Ut),
+              u(e, [t.X, t.Y], [n.X, n.Y]),
+              (e.lineWidth = c),
+              f - 1 == ua
+                ? ((e.strokeStyle = at), (e.fillStyle = at))
+                : ((e.strokeStyle = tt), (e.fillStyle = tt)),
+              e.beginPath(),
+              e.arc(a.X, a.Y, Qt / 2, 0, 2 * Math.PI),
+              e.fill(),
+              (c = e.lineWidth),
+              (e.lineWidth = Ut),
+              u(e, [t.X, t.Y], [a.X, a.Y]),
+              (e.lineWidth = c);
+          } else {
+            f - 1 == ua
+              ? ((e.strokeStyle = at), (e.fillStyle = at))
+              : ((e.strokeStyle = tt), (e.fillStyle = tt)),
+              e.beginPath(),
+              e.arc(a.X, a.Y, Qt / 2, 0, 2 * Math.PI),
+              e.fill();
+            var y = e.lineWidth;
+            (e.lineWidth = Ut),
+              u(e, [t.X, t.Y], [a.X, a.Y]),
+              (e.lineWidth = y),
+              f - 1 == ya
+                ? ((e.strokeStyle = at), (e.fillStyle = at))
+                : ((e.strokeStyle = tt), (e.fillStyle = tt)),
+              e.beginPath(),
+              e.arc(n.X, n.Y, Qt / 2, 0, 2 * Math.PI),
+              e.fill(),
+              (y = e.lineWidth),
+              (e.lineWidth = Ut),
+              u(e, [t.X, t.Y], [n.X, n.Y]),
+              (e.lineWidth = y);
+          }
+          (i = I(0, ((f + aa) / qt) * $t, 0)),
+            (l = I(0, ((f - aa) / qt) * $t, 0)),
+            (r = I(0, ((f - aa) / qt) * $t, ta * na)),
+            (o = I(0, ((f + aa) / qt) * $t, ta * na)),
+            (ia[f - 1][0] = i.X),
+            (la[f - 1][0] = i.Y),
+            (ia[f - 1][1] = l.X),
+            (la[f - 1][1] = l.Y),
+            (ia[f - 1][2] = r.X),
+            (la[f - 1][2] = r.Y),
+            (ia[f - 1][3] = o.X),
+            (la[f - 1][3] = o.Y),
+            yt &&
+              f - 1 == ua &&
+              ((e.strokeStyle = at),
+              (e.fillStyle = at),
+              u(e, [i.X, i.Y], [l.X, l.Y]),
+              u(e, [l.X, l.Y], [r.X, r.Y]),
+              u(e, [r.X, r.Y], [o.X, o.Y]),
+              u(e, [o.X, o.Y], [i.X, i.Y]),
+              e.fillText(wt[f - 1].toFixed(3), i.X, l.Y - 4 * (i.Y - l.Y))),
+            1 == f && (ba = na / (i.Y - o.Y) / ma),
+            (i = I(0, ((f + aa) / qt) * $t, 0)),
+            (l = I(0, ((f - aa) / qt) * $t, 0)),
+            (r = I((-2 * $t) / qt, ((f - aa) / qt) * $t, 0)),
+            (o = I((-2 * $t) / qt, ((f + aa) / qt) * $t, 0)),
+            (ra[f - 1][0] = i.X),
+            (oa[f - 1][0] = i.Y),
+            (ra[f - 1][1] = l.X),
+            (oa[f - 1][1] = l.Y),
+            (ra[f - 1][2] = r.X),
+            (oa[f - 1][2] = r.Y),
+            (ra[f - 1][3] = o.X),
+            (oa[f - 1][3] = o.Y),
+            yt &&
+              f - 1 == ya &&
+              ((e.strokeStyle = at),
+              (e.fillStyle = at),
+              u(e, [i.X, i.Y], [l.X, l.Y]),
+              u(e, [l.X, l.Y], [r.X, r.Y]),
+              u(e, [r.X, r.Y], [o.X, o.Y]),
+              u(e, [o.X, o.Y], [i.X, i.Y]),
+              e.fillText(
+                (Pt[f - 1] / Math.PI).toFixed(3) + "Ď€",
+                o.X,
+                r.Y - 2 * (o.Y - r.Y)
+              )),
+            1 == f && (Sa = (2 * Math.PI) / (i.X - o.X) / ma);
+        }
+        e.fillStyle = ot;
+        var h;
+        (h =
+          1 == f
+            ? "0"
+            : (!tutorialOn || 14 != tutorialLesson) && f == Zt && Et > qt
+            ? "Ć©" + qt.toString() + "-" + (Et - 1).toString() + "fâ‚€"
+            : (s - 1).toString() + "fâ‚€"),
+          f == Zt && Et > qt
+            ? e.fillText(h, t.X - ct * ea, t.Y + ut * ea)
+            : e.fillText(h, t.X - st * ea, t.Y + ft * ea);
+      }
+      return e;
+    }
+    function k(e) {
+      var t, a, n, i, l, r, o;
+      e.font = Qe;
+      for (var s = 1; s <= Ca; s++) {
+        if (
+          ((t = I(0, (s / Aa) * $t, 0, 2)),
+          (a = I(0, (s / Aa) * $t, ta * xa[s - 1], 2)),
+          (n = I(((-Ia[s - 1] / Math.PI) * $t) / Aa, (s / Aa) * $t, 0, 2)),
+          s - 1 == Ga && s - 1 != Ka)
+        ) {
+          s - 1 == Ka
+            ? ((e.strokeStyle = gt), (e.fillStyle = gt))
+            : ((e.strokeStyle = Yt), (e.fillStyle = Yt)),
+            e.beginPath(),
+            e.arc(n.X, n.Y, Qt / 2, 0, 2 * Math.PI),
+            e.fill();
+          var f = e.lineWidth;
+          (e.lineWidth = Ut),
+            u(e, [t.X, t.Y], [n.X, n.Y]),
+            (e.lineWidth = f),
+            s - 1 == Ga
+              ? ((e.strokeStyle = gt), (e.fillStyle = gt))
+              : ((e.strokeStyle = Yt), (e.fillStyle = Yt)),
+            e.beginPath(),
+            e.arc(a.X, a.Y, Qt / 2, 0, 2 * Math.PI),
+            e.fill(),
+            (f = e.lineWidth),
+            (e.lineWidth = Ut),
+            u(e, [t.X, t.Y], [a.X, a.Y]),
+            (e.lineWidth = f);
+        } else {
+          s - 1 == Ga
+            ? ((e.strokeStyle = gt), (e.fillStyle = gt))
+            : ((e.strokeStyle = Yt), (e.fillStyle = Yt)),
+            e.beginPath(),
+            e.arc(a.X, a.Y, Qt / 2, 0, 2 * Math.PI),
+            e.fill();
+          var c = e.lineWidth;
+          (e.lineWidth = Ut),
+            u(e, [t.X, t.Y], [a.X, a.Y]),
+            (e.lineWidth = c),
+            s - 1 == Ka
+              ? ((e.strokeStyle = gt), (e.fillStyle = gt))
+              : ((e.strokeStyle = Yt), (e.fillStyle = Yt)),
+            e.beginPath(),
+            e.arc(n.X, n.Y, Qt / 2, 0, 2 * Math.PI),
+            e.fill(),
+            (c = e.lineWidth),
+            (e.lineWidth = Ut),
+            u(e, [t.X, t.Y], [n.X, n.Y]),
+            (e.lineWidth = c);
+        }
+        (i = I(0, ((s + aa) / Aa) * $t, 0, 2)),
+          (l = I(0, ((s - aa) / Aa) * $t, 0, 2)),
+          (r = I(0, ((s - aa) / Aa) * $t, ta * na, 2)),
+          (o = I(0, ((s + aa) / Aa) * $t, ta * na, 2)),
+          (Wa[s - 1][0] = i.X),
+          (Fa[s - 1][0] = i.Y),
+          (Wa[s - 1][1] = l.X),
+          (Fa[s - 1][1] = l.Y),
+          (Wa[s - 1][2] = r.X),
+          (Fa[s - 1][2] = r.Y),
+          (Wa[s - 1][3] = o.X),
+          (Fa[s - 1][3] = o.Y),
+          yt &&
+            s - 1 == Ga &&
+            ((e.strokeStyle = gt),
+            (e.fillStyle = gt),
+            u(e, [i.X, i.Y], [l.X, l.Y]),
+            u(e, [l.X, l.Y], [r.X, r.Y]),
+            u(e, [r.X, r.Y], [o.X, o.Y]),
+            u(e, [o.X, o.Y], [i.X, i.Y]),
+            e.fillText(xa[s - 1].toFixed(3), i.X, l.Y - 4 * (i.Y - l.Y))),
+          1 == s && ($a = na / (i.Y - o.Y) / ma),
+          (i = I(0, ((s + aa) / Aa) * $t, 0, 2)),
+          (l = I(0, ((s - aa) / Aa) * $t, 0, 2)),
+          (r = I((-2 * $t) / Aa, ((s - aa) / Aa) * $t, 0, 2)),
+          (o = I((-2 * $t) / Aa, ((s + aa) / Aa) * $t, 0, 2)),
+          (Da[s - 1][0] = i.X),
+          (Ha[s - 1][0] = i.Y),
+          (Da[s - 1][1] = l.X),
+          (Ha[s - 1][1] = l.Y),
+          (Da[s - 1][2] = r.X),
+          (Ha[s - 1][2] = r.Y),
+          (Da[s - 1][3] = o.X),
+          (Ha[s - 1][3] = o.Y),
+          yt &&
+            s - 1 == Ka &&
+            ((e.strokeStyle = gt),
+            (e.fillStyle = gt),
+            u(e, [i.X, i.Y], [l.X, l.Y]),
+            u(e, [l.X, l.Y], [r.X, r.Y]),
+            u(e, [r.X, r.Y], [o.X, o.Y]),
+            u(e, [o.X, o.Y], [i.X, i.Y]),
+            e.fillText(
+              (Ia[s - 1] / Math.PI).toFixed(3) + "Ď€",
+              o.X,
+              r.Y - 2 * (o.Y - r.Y)
+            )),
+          1 == s && (en = (2 * Math.PI) / (i.X - o.X) / ma),
+          (e.fillStyle = ot);
+        var y;
+        (y =
+          1 == s
+            ? "0"
+            : s == Ca && La > Aa
+            ? "Ć©" + Aa.toString() + "-" + (La - 1).toString() + "fâ‚€"
+            : (s - 1).toString() + "fâ‚€"),
+          s == Ca && La > Aa
+            ? e.fillText(y, t.X - ct * ea, t.Y + ut * ea)
+            : e.fillText(y, t.X - st * ea, t.Y + ft * ea);
+      }
+      return e;
+    }
+    function d(e) {
+      var t, a, n;
+      e.font = Qe;
+      for (var i = 1; i <= Zt; i++) {
+        if (((t = I(0, (i / qt) * $t, 0, 3)), !(i == Zt && Et > qt))) {
+          (a = I(0, (i / qt) * $t, ta * jt[i - 1], 3)),
+            (n = I(((-Jt[i - 1] / Math.PI) * $t) / qt, (i / qt) * $t, 0, 3)),
+            (e.strokeStyle = ht),
+            (e.fillStyle = ht),
+            e.beginPath(),
+            e.arc(n.X, n.Y, Qt / 2, 0, 2 * Math.PI),
+            e.fill();
+          var l = e.lineWidth;
+          (e.lineWidth = Ut),
+            u(e, [t.X, t.Y], [n.X, n.Y]),
+            (e.lineWidth = l),
+            (e.strokeStyle = ht),
+            (e.fillStyle = ht),
+            e.beginPath(),
+            e.arc(a.X, a.Y, Qt / 2, 0, 2 * Math.PI),
+            e.fill(),
+            (l = e.lineWidth),
+            (e.lineWidth = Ut),
+            u(e, [t.X, t.Y], [a.X, a.Y]),
+            (e.lineWidth = l);
+        }
+        e.fillStyle = zt;
+        var r;
+        (r =
+          1 == i
+            ? "0"
+            : i == Zt && Et > qt
+            ? "Ć©" + qt.toString() + "-" + (Et - 1).toString() + "fâ‚€"
+            : (i - 1).toString() + "fâ‚€"),
+          i == Zt && Et > qt
+            ? e.fillText(r, t.X - ct * ea, t.Y + ut * ea)
+            : e.fillText(r, t.X - st * ea, t.Y + ft * ea);
+      }
+      return e;
+    }
+    function v() {
+      for (
+        var e = arguments.length > 0 && void 0 !== arguments[0] && arguments[0],
+          t = 0;
+        t < bt;
+        t++
+      )
+        (Mt[2 * t] = St[t] / bt), (Mt[2 * t + 1] = 0);
+      Ct.transform(Mt, !1),
+        (Ta = Mt.slice(0)),
+        (Zt = tutorialOn && 14 == tutorialLesson ? 11 : Math.min(qt, Et)),
+        (Ca = Zt),
+        (wt[0] = S(Mt[0], Mt[1])),
+        (Pt[0] = M(Mt[0], Mt[1])),
+        Math.abs(wt[0]) < Kt
+          ? (Pt[0] = 0)
+          : Pt[0] < 0
+          ? (Pt[0] += 2 * Math.PI)
+          : Pt[0] >= 2 * Math.PI && (Pt[0] -= 2 * Math.PI),
+        Math.abs(Pt[0] - 2 * Math.PI) < Kt && (Pt[0] = 0);
+      for (var a = 1; a < Zt; a++)
+        (n = tutorialOn && 14 == tutorialLesson ? 1 << (a - 1) : a),
+          (wt[n] = 2 * S(Mt[2 * n], Mt[2 * n + 1])),
+          (Pt[n] = M(Mt[2 * n], Mt[2 * n + 1])),
+          Math.abs(wt[n]) < Kt
+            ? (Pt[n] = 0)
+            : Pt[n] < 0
+            ? (Pt[n] += 2 * Math.PI)
+            : Pt[n] >= 2 * Math.PI && (Pt[n] -= 2 * Math.PI),
+          Math.abs(Pt[n] - 2 * Math.PI) < Kt && (Pt[n] = 0);
+      for (var n, i = 0; i < Zt; i++) {
+        n = tutorialOn && 14 == tutorialLesson ? 1 << (i - 1) : i;
+        for (var l = 0; l < bt; l++)
+          _a[i][l] = wt[n] * Math.cos((2 * Math.PI * n * l) / bt + Pt[n]);
+      }
+      for (var r = 0; r < bt - (2 * Et - 1); r++)
+        (Mt[2 * Et + 2 * r] = 0), (Mt[2 * Et + 2 * r + 1] = 0);
+      Ct.transform(Mt, !0);
+      for (var o = 0; o < bt; o++) Pa[o] = Mt[2 * o];
+      if ((!tutorialOn || 14 != tutorialLesson) && Et > qt) {
+        for (var s = 0; s < qt; s++) (Ta[2 * s] = 0), (Ta[2 * s + 1] = 0);
+        for (var c = 0; c < bt - (2 * Et - 1); c++)
+          (Ta[2 * Et + 2 * c] = 0), (Ta[2 * Et + 2 * c + 1] = 0);
+        for (var u = 0; u < qt - 1; u++)
+          (Ta[2 * (u + bt - qt + 1)] = 0), (Ta[2 * (u + bt - qt + 1) + 1] = 0);
+        Ct.transform(Ta, !0);
+        for (var h = 0; h < bt; h++) Ja[h] = Ta[2 * h];
+        (Zt += 1), (Ca = Zt);
+      }
+      De && b(), Ne && f(), (Ot = !0), e || y();
+    }
+    function p(e, t, a) {
+      for (
+        var n = arguments.length > 3 && void 0 !== arguments[3] && arguments[3],
+          i = 0;
+        i < bt;
+        i++
+      )
+        (Mt[2 * i] = St[i] / bt), (Mt[2 * i + 1] = 0);
+      if ((Ct.transform(Mt, !1), 0 !== e)) {
+        var l = 0.5 * t * Math.cos(a),
+          r = 0.5 * t * Math.sin(a);
+        (Mt[2 * e] = l),
+          (Mt[2 * e + 1] = r),
+          (Mt[2 * (bt - e)] = l),
+          (Mt[2 * (bt - e) + 1] = -r);
+      } else (Mt[0] = a < Math.PI / 2 ? t : -t), (Mt[1] = 0);
+      Ct.transform(Mt, !0);
+      for (var o = 0; o < bt; o++) St[o] = Mt[2 * o];
+      n || v();
+    }
+    function z(e, t) {
+      (ua = e), (ya = t), (ha == ua && ka == ya) || ((ha = ua), (ka = ya), y());
+    }
+    function Y(e, t) {
+      var a = Pt[e],
+        n = 0.1 * Math.PI;
+      (a += n * t), p(e, wt[e], a);
+    }
+    function g(e) {
+      if (e > bt / 2) throw "harmonicsUvazuj <= N/2";
+      (Et = e), (La = Et), v();
+    }
+    function X(e, t) {
+      (Ga = e), (Ka = t), (Ua == Ga && Qa == Ka) || ((Ua = Ga), (Qa = Ka), y());
+    }
+    function m(e, t, a) {
+      var n = arguments.length > 3 && void 0 !== arguments[3] && arguments[3];
+      (xa[e] = t), (Ia[e] = a), n || b();
+    }
+    function b() {
+      for (var e = 0; e < bt; e++)
+        (_t[2 * e] = St[e] / bt), (_t[2 * e + 1] = 0);
+      Ct.transform(_t, !1),
+        (_t[0] = (Ia[0] < Math.PI / 2 ? 1 : -1) * xa[0] * _t[0]),
+        (_t[1] = 0),
+        (Zt = Math.min(qt, Et));
+      for (var t = 1; t < Zt; t++) {
+        var a = 2 * S(_t[2 * t], _t[2 * t + 1]),
+          n = M(_t[2 * t], _t[2 * t + 1]);
+        (a *= xa[t]), (n += Ia[t]);
+        var i = 0.5 * a * Math.cos(n),
+          l = 0.5 * a * Math.sin(n);
+        (_t[2 * t] = i),
+          (_t[2 * t + 1] = l),
+          (_t[2 * (bt - t)] = i),
+          (_t[2 * (bt - t) + 1] = -l);
+      }
+      for (var r = qt; r < bt / 2; r++) {
+        var o = 2 * S(_t[2 * r], _t[2 * r + 1]),
+          s = M(_t[2 * r], _t[2 * r + 1]);
+        (o *= xa[Zt]), (s += Ia[Zt]);
+        var c = 0.5 * o * Math.cos(s),
+          u = 0.5 * o * Math.sin(s);
+        (_t[2 * r] = c),
+          (_t[2 * r + 1] = u),
+          (_t[2 * (bt - r)] = c),
+          (_t[2 * (bt - r) + 1] = -u);
+      }
+      (Lt = _t.slice(0)),
+        (Zt = Math.min(qt, Et)),
+        (Ca = Zt),
+        (jt[0] = S(_t[0], _t[1])),
+        (Jt[0] = M(_t[0], _t[1])),
+        Math.abs(jt[0]) < Kt
+          ? (Jt[0] = 0)
+          : Jt[0] < 0
+          ? (Jt[0] += 2 * Math.PI)
+          : Jt[0] >= 2 * Math.PI && (Jt[0] -= 2 * Math.PI),
+        Math.abs(Jt[0] - 2 * Math.PI) < Kt && (Jt[0] = 0);
+      for (var h = 1; h < Zt; h++)
+        (jt[h] = 2 * S(_t[2 * h], _t[2 * h + 1])),
+          (Jt[h] = M(_t[2 * h], _t[2 * h + 1])),
+          Math.abs(jt[h]) < Kt
+            ? (Jt[h] = 0)
+            : Jt[h] < 0
+            ? (Jt[h] += 2 * Math.PI)
+            : Jt[h] >= 2 * Math.PI && (Jt[h] -= 2 * Math.PI),
+          Math.abs(Jt[h] - 2 * Math.PI) < Kt && (Jt[h] = 0);
+      for (var k = 0; k < Zt; k++)
+        for (var d = 0; d < bt; d++)
+          xt[k][d] = jt[k] * Math.cos((2 * Math.PI * k * d) / bt + Jt[k]);
+      for (var v = 0; v < bt - (2 * Et - 1); v++)
+        (_t[2 * Et + 2 * v] = 0), (_t[2 * Et + 2 * v + 1] = 0);
+      Ct.transform(_t, !0);
+      for (var p = 0; p < bt; p++) Tt[p] = _t[2 * p];
+      if (Et > qt) {
+        for (var z = 0; z < qt; z++) (Lt[2 * z] = 0), (Lt[2 * z + 1] = 0);
+        for (var Y = 0; Y < bt - (2 * Et - 1); Y++)
+          (Lt[2 * Et + 2 * Y] = 0), (Lt[2 * Et + 2 * Y + 1] = 0);
+        for (var g = 0; g < qt - 1; g++)
+          (Lt[2 * (g + bt - qt + 1)] = 0), (Lt[2 * (g + bt - qt + 1) + 1] = 0);
+        Ct.transform(Lt, !0);
+        for (var X = 0; X < bt; X++) At[X] = Lt[2 * X];
+        (Zt += 1), (Ca = Zt);
+      }
+      Ne && f(), y();
+    }
+    function S(e, t) {
+      return Math.sqrt(e * e + t * t);
+    }
+    function M(e, t) {
+      return Math.atan2(t, e);
+    }
+    function w() {
+      (this.x = 0),
+        (this.y = 0),
+        (this.X = 0),
+        (this.Y = 0),
+        (this.prepocti = J);
+    }
+    function P() {
+      (Va = De ? 1.2 : 2.583333),
+        (Ba = De ? 1 : 3.3),
+        (Na = Math.min(Wt, Ft * Va));
+    }
+    function _() {
+      return De ? 0.3 : 1;
+    }
+    function j() {
+      var e =
+        arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0;
+      De && 0 == e && (e = 1);
+      var t = 0;
+      return 1 == e ? (t = 0.4) : 2 == e ? (t = 0.22) : 3 == e && (t = -0.2), t;
+    }
+    function J() {
+      var e =
+        arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0;
+      P();
+      var t = _(),
+        a = j(e);
+      (this.X = ((this.x * Na) / Ba) * t + Wt * fn),
+        (this.Y = ((-this.y * Na) / Ba) * t + (Ft - (a * Na) / Ba) * cn);
+    }
+    function T() {
+      (this.x = 0),
+        (this.y = 0),
+        (this.z = 0),
+        (this.X = 0),
+        (this.Y = 0),
+        (this.x2D = 0),
+        (this.y2D = 0),
+        (this.prepocti = x);
+    }
+    function x() {
+      var e =
+        arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0;
+      P();
+      var t = _(),
+        a = j(e);
+      (this.x2D = (((this.X - Wt * fn) / Na) * Ba) / t),
+        (this.y2D = -((((this.Y - (Ft - (a * Na) / Ba) * cn) / Na) * Ba) / t));
+    }
+    function I(e, t, a) {
+      var n =
+          arguments.length > 3 && void 0 !== arguments[3] ? arguments[3] : 0,
+        i = new w();
+      return (
+        (i.x = hn * e + kn * a + dn * t),
+        (i.y = vn * e + pn * a + zn * t),
+        i.prepocti(n),
+        i
+      );
+    }
+    function A(e, t) {
+      var a = new T();
+      return (
+        (a.y = 0),
+        (a.x = (pn * e - kn * t) / (hn * pn - kn * vn)),
+        (a.z = -(vn * e - hn * t) / (hn * pn - kn * vn)),
+        a
+      );
+    }
+    function L(e, t, a, n, i) {
+      var l = !1,
+        r = t[0] - t[1],
+        o = a[0] - a[1],
+        s = t[2] - t[1],
+        f = a[2] - a[1],
+        c = n - t[1],
+        u = i - a[1],
+        y = r * f - o * s;
+      if (0 != y) {
+        var h = 1 / y,
+          k = (c * f - s * u) * h,
+          d = (r * u - c * o) * h;
+        l = k > 0 && d > 0 && k < 1 && d < 1;
+      }
+      return l;
+    }
+    function s(e) {
+      return 440 * Math.pow(2, (1 * (e - 30)) / 12);
+    }
+    function C(e) {
+      if (((this.size = e), 0 !== (this.size & (this.size - 1))))
+        throw "size must be power of two!";
+      (this.wtabf = new Array(this.size).fill(0)),
+        (this.wtabi = new Array(this.size).fill(0));
+      for (var t = 0; t != this.size; t += 2) {
+        var a = (Math.PI * t) / this.size;
+        (this.wtabi[t] = Math.cos(a)),
+          (this.wtabi[t + 1] = Math.sin(a)),
+          (this.wtabf[t] = this.wtabi[t]),
+          (this.wtabf[t + 1] = -this.wtabi[t + 1]);
+      }
+      this.transform = W;
+    }
+    function W(e, t) {
+      for (var a = 0, n = 2 * this.size, i = 0; i != n; i += 2) {
+        if (i > a) {
+          var l = e[i];
+          (e[i] = e[a]),
+            (e[a] = l),
+            (l = e[i + 1]),
+            (e[i + 1] = e[a + 1]),
+            (e[a + 1] = l);
+        }
+        for (var r = this.size; 0 !== (r & a); ) (a &= ~r), (r >>= 1);
+        a |= r;
+      }
+      for (
+        var o,
+          s,
+          f,
+          c,
+          u,
+          y,
+          h,
+          k,
+          d,
+          v,
+          p,
+          z,
+          Y = this.size << 1,
+          g = t ? this.wtabi : this.wtabf,
+          X = 0;
+        X != n;
+        X += 4
+      )
+        (h = e[X]),
+          (k = e[X + 1]),
+          (d = e[X + 2]),
+          (v = e[X + 3]),
+          (e[X] = h + d),
+          (e[X + 1] = k + v),
+          (e[X + 2] = h - d),
+          (e[X + 3] = k - v);
+      Y >>= 1;
+      for (var m = t ? 1 : -1, b = 0; b != n; b += 8)
+        (h = e[b]),
+          (k = e[b + 1]),
+          (d = e[b + 4]),
+          (v = e[b + 5]),
+          (e[b] = h + d),
+          (e[b + 1] = k + v),
+          (e[b + 4] = h - d),
+          (e[b + 5] = k - v),
+          (h = e[b + 2]),
+          (k = e[b + 3]),
+          (d = e[b + 6] * m),
+          (v = e[b + 7] * m),
+          (e[b + 2] = h - v),
+          (e[b + 3] = k + d),
+          (e[b + 6] = h + v),
+          (e[b + 7] = k - d);
+      for (Y >>= 1, o = 16; o <= n; o <<= 1) {
+        (s = o >> 1), (Y >>= 1);
+        for (var S = 0; S < n; S += o)
+          for (f = 0, a = S; a != S + s; a += 2, f += Y)
+            (u = g[f]),
+              (y = g[f + 1]),
+              (h = e[a]),
+              (k = e[a + 1]),
+              (c = a + s),
+              (d = e[c]),
+              (v = e[c + 1]),
+              (p = d * u - v * y),
+              (z = d * y + v * u),
+              (e[a] = h + p),
+              (e[a + 1] = k + z),
+              (e[c] = h - p),
+              (e[c + 1] = k - z);
+      }
+    }
+    function F() {
+      for (var e = 0; e < bt; e++) St[e] = 0;
+    }
+    function D() {
+      for (var e = 0; e < bt; e++) St[e] = Math.cos((2 * Math.PI * e) / bt);
+    }
+    function H() {
+      for (var e = 0; e < bt; e++) St[e] = Math.sin((2 * Math.PI * e) / bt);
+    }
+    function O() {
+      for (var e = 0; e < bt / 2; e++) St[e] = 1;
+      for (var t = bt / 2; t < bt; t++) St[t] = -1;
+    }
+    function R() {
+      for (var e = 0; e < bt / 4; e++) St[e] = 1;
+      for (var t = bt / 4; t < (3 * bt) / 4; t++) St[t] = -1;
+      for (var a = (3 * bt) / 4; a < bt; a++) St[a] = 1;
+    }
+    function q() {
+      for (var e = 0; e < bt; e++) St[e] = -e / (bt / 2) + 1;
+    }
+    function E() {
+      for (var e = 0; e < bt / 2; e++)
+        St[e] = 2 * (-e / (bt / 2) + 0.5 - 0.008);
+      for (var t = bt / 2; t < bt; t++)
+        St[t] = 2 * (-(t - bt / 2) / (bt / 2) + 0.5 - 0.008);
+    }
+    function Z() {
+      for (var e = 0; e < bt / 2; e++) St[e] = 2 * (-e / (bt / 2) + 0.5);
+      for (var t = bt / 2; t < bt; t++)
+        St[t] = 2 * ((t - bt / 2) / (bt / 2) - 0.5);
+    }
+    function V() {
+      for (var e = 0; e < 2 * bt; e++) Mt[e] = 0;
+      (Mt[16] = 0.3),
+        (Mt[18] = 0.3),
+        (Mt[2 * (bt - 9)] = 0.3),
+        (Mt[2 * (bt - 8)] = 0.3),
+        Ct.transform(Mt, !0);
+      for (var t = 0; t < bt; t++) St[t] = Mt[2 * t];
+    }
+    function N() {
+      F();
+      for (var e = (2 * bt) / 4; e < (3 * bt) / 4; e++)
+        St[e] = 2 * Math.sin((2 * Math.PI * 4 * e) / bt);
+    }
+    function B(e) {
+      ua >= 0
+        ? p(ua, 1, Pt[ua])
+        : ya >= 0
+        ? p(ya, wt[ya], 0)
+        : Ga >= 0
+        ? m(Ga, 1, Ia[Ga])
+        : Ka >= 0 && m(Ka, xa[Ka], 0);
+    }
+    function G(e) {
+      (Yn = !1), (pa = !1), (Ma = -1), (wa = -1);
+    }
+    function K(e) {
+      (Yn = !0),
+        Oe &&
+          ((pa = !0),
+          (za = e[0]),
+          (Ya = e[1]),
+          ua >= 0
+            ? ((ga = wt[ua]), (Xa = Pt[ua]))
+            : ya >= 0
+            ? ((ga = wt[ya]), (Xa = Pt[ya]))
+            : Ga >= 0
+            ? ((ga = xa[Ga]), (Xa = Ia[Ga]))
+            : Ka >= 0 && ((ga = xa[Ka]), (Xa = Ia[Ka])));
+    }
+    function U(e) {
+      if (Yn) {
+        if (!Oe) return;
+        if (pa) {
+          var t = e[0] - za,
+            a = e[1] - Ya;
+          if (da) {
+            (St = Pa.slice(0)),
+              (Et = bt / 2),
+              (La = Et),
+              (harmonicSlider.value = Et),
+              (lblHarmonicke.textContent = Et - 1);
+            var n = new T();
+            (n.X = e[0]), (n.Y = e[1]), n.prepocti();
+            var i = A(n.x2D, n.y2D),
+              l = $t / bt / Vt,
+              r = 0,
+              o = ((Vt - 1) * bt + (bt - 1)) * l;
+            if (i.x < r || i.x > o) return;
+            var s = (i.x / l + 0.5).toFixed() % bt,
+              f = i.z / ta;
+            if (
+              (f > na && (f = na), f < -na && (f = -na), (St[s] = f), Ma != -1)
+            ) {
+              var c, u, h, k;
+              if (
+                (s <= Ma
+                  ? ((c = s), (h = f), (u = Ma), (k = wa))
+                  : ((c = Ma), (h = wa), (u = s), (k = f)),
+                u - c < bt / 2)
+              )
+                for (var d = c + 1; d < u; d++)
+                  St[d] = ((d - c) * (k - h)) / (u - c) + h;
+              else {
+                for (var Y = u + 1; Y < bt; Y++)
+                  St[Y] = ((Y - u) * (h - k)) / (bt - u + c + 1) + k;
+                for (var g = 0; g < c; g++)
+                  St[g] = ((g + bt - u) * (h - k)) / (bt - u + c + 1) + k;
+              }
+            }
+            v(), (Ma = s), (wa = f);
+          } else if (ua >= 0) {
+            var b = ga - a * ba;
+            b < 0 && (b = 0), b > na && (b = na), p(ua, b, Xa);
+          } else if (ya >= 0) {
+            var S = Xa - t * Sa;
+            S < 0 && (S = 0),
+              S >= 2 * Math.PI && (S = 2 * Math.PI - Sa),
+              p(ya, ga, S);
+          } else if (Ga >= 0) {
+            var M = ga - a * ba;
+            M < 0 && (M = 0), M > na && (M = na), m(Ga, M, Xa);
+          } else if (Ka >= 0) {
+            var w = Xa - t * Sa;
+            0 == Ka
+              ? w >= Math.PI / 2
+                ? (w = Math.PI)
+                : w < Math.PI / 2 && (w = 0)
+              : (w < 0 && (w = 0), w >= 2 * Math.PI && (w = 2 * Math.PI - Sa)),
+              m(Ka, ga, w);
+          }
+        }
+      } else {
+        if (!Oe) return;
+        if (!pa) {
+          var P = e[0],
+            _ = e[1],
+            j = -1,
+            J = -1;
+          (da = L(4, fa, ca, P, _)), va != da && ((va = da), y());
+          for (var x = Math.min(qt, Et), I = 0; I < x; I++)
+            if (L(4, ia[I], la[I], P, _)) {
+              j = I;
+              break;
+            }
+          for (var C = 0; C < x; C++)
+            if (L(4, ra[C], oa[C], P, _)) {
+              J = C;
+              break;
+            }
+          if ((z(j, J), De)) {
+            (j = -1), (J = -1), (x = Ca);
+            for (var W = 0; W < x; W++)
+              if (L(4, Wa[W], Fa[W], P, _)) {
+                j = W;
+                break;
+              }
+            for (var F = 0; F < x; F++)
+              if (L(4, Da[F], Ha[F], P, _)) {
+                J = F;
+                break;
+              }
+            X(j, J);
+          }
+        }
+      }
+    }
+    function Q(e, t, a, n, i, l, r, o, s) {
+      var f;
+      (Re = !s),
+        (f = t ? "inline" : "none"),
+        (lblSnd.style.display = f),
+        (checkSound.style.display = f),
+        (volumeSlider.style.display = f),
+        (lblHlasitost.style.display = f),
+        (f = a ? "inline" : "none"),
+        (f0Slider.style.display = f),
+        (f = n ? "inline" : "none"),
+        (lblF0.style.display = f),
+        (lblTxtF0.style.display = f),
+        (lblTxtHz.style.display = f),
+        (f = r ? "inline" : "none"),
+        (lblFreqResp.style.display = f),
+        (checkFreqResp.style.display = f),
+        (f = e ? "inline" : "none"),
+        (btn1.style.display = f),
+        (btn2.style.display = f),
+        (btn3.style.display = f),
+        (btn4.style.display = f),
+        (btn5.style.display = f),
+        (btn6.style.display = f),
+        (btn7.style.display = f),
+        (btn8.style.display = f),
+        (btn9.style.display = f),
+        (btn10.style.display = f),
+        (f = i ? "inline" : "none"),
+        (harmonicSlider.style.display = f),
+        (btnDefault9.style.display = f),
+        (f = l ? "inline" : "none"),
+        (lblHarmonicke.style.display = f),
+        (lblTxtHarmonicke.style.display = f),
+        (Oe = o),
+        0 == o &&
+          ((ua = -1),
+          (ya = -1),
+          (da = !1),
+          (De = !1),
+          (ha = 0),
+          (ka = 0),
+          (va = !1),
+          (Ga = -1),
+          (Ka = -1),
+          (Ua = -1),
+          (Qa = -1)),
+        y();
+    }
+    function $() {
+      for (var e = 1; e < qt; e++) p(e, wt[e], Math.random() * Math.PI * 2, !0);
+      v();
+    }
+    function ee() {
+      qa.frequency.value = 1;
+      var e = new Float32Array(442).fill(0),
+        t = new Float32Array(442).fill(0);
+      (e[439] = 0.2 * on), (e[441] = 0.2 * on);
+      var a = Ra.createPeriodicWave(e, t, { disableNormalization: !0 });
+      qa.setPeriodicWave(a);
+    }
+    function te() {
+      checkSound.checked && !Ne && ((Ne = !0), l());
+    }
+    function ae() {
+      checkSound.checked && ((Ne = !1), l());
+    }
+    function ne() {
+      var e = 2e3,
+        t = 0;
+      if (1 == tutorialLesson) {
+        if (((t = 50), 0 == Fe))
+          Q(!1, !1, !1, !1, !1, !0, !1, !1, !1), O(), Je(25), Te(48), v();
+        else if (Fe >= 1 && Fe <= 23) {
+          jazyk == Jazyk_anglicky
+            ? (Rt = "Gibbs effect: approx. 18% overshoot at jumps")
+            : jazyk == Jazyk_cesky &&
+              (Rt = "GibbsĹŻv efekt: cca 18% pĹ™ekmit pĹ™i nespojitostech");
+          var a = 49 - 2 * (Fe - 1);
+          Te(a + 1), Fe++;
+        } else if (Fe >= 24 && Fe <= 46) {
+          var n = 3 + 2 * (Fe - 24);
+          Te(n + 1), Fe++;
+        } else if (Fe >= 47 && Fe <= 69) {
+          var i = 49 - 2 * (Fe - 47);
+          Te(i + 1), Fe++;
+        } else if (Fe >= 70 && Fe <= 92) {
+          var l = 3 + 2 * (Fe - 70);
+          Te(l + 1),
+            92 == Fe &&
+              ((t = e),
+              jazyk == Jazyk_anglicky
+                ? (Rt = "Discrete time instances can hide Gibbs effect")
+                : jazyk == Jazyk_cesky &&
+                  (Rt =
+                    "DiskrĂ©tnĂ­ ÄŤasovĂ© okamĹľiky mohou schovat GibbsĹŻv efekt"),
+              y()),
+            Fe++;
+        } else if (Fe >= 93 && Fe <= 100) {
+          var r = 10 * (Fe - 93) + 57;
+          Te(r + 1), 100 == Fe && (t = e), Fe++;
+        } else if (Fe >= 101 && Fe <= 106) {
+          var o = 10 * -(Fe - 101) + 117;
+          Te(o + 1), Fe++;
+        } else if (Fe >= 107 && Fe <= 114) {
+          var f = 10 * (Fe - 107) + 57;
+          Te(f + 1), 114 == Fe && (t = e), Fe++;
+        } else if (Fe >= 115 && Fe <= 120) {
+          var c = 10 * -(Fe - 115) + 117;
+          Te(c + 1), Fe++;
+        } else if (Fe >= 121 && Fe <= 128) {
+          var u = 10 * (Fe - 121) + 57;
+          Te(u + 1), 128 == Fe && (t = e), Fe++;
+        } else if (Fe >= 129 && Fe <= 134) {
+          var h = 10 * -(Fe - 129) + 117;
+          Te(h + 1), Fe < 134 ? Fe++ : (Fe = 1);
+        }
+      } else if (2 == tutorialLesson) {
+        if (0 == Fe)
+          Q(!1, !0, !1, !0, !1, !0, !1, !1, !1),
+            O(),
+            Je(20),
+            Te(1),
+            v(),
+            checkSound.checked
+              ? (Rt = "")
+              : jazyk == Jazyk_cesky
+              ? (Rt = "ZapnÄ›te prosĂ­m zvuk.")
+              : jazyk == Jazyk_anglicky && (Rt = "Turn the sound on, please."),
+            y();
+        else if (Fe >= 1 && Fe <= 32) {
+          jazyk == Jazyk_anglicky
+            ? (Rt = "Round signal - round tone, sharp signal - sharp tone")
+            : jazyk == Jazyk_cesky &&
+              (Rt =
+                "KulatĂ˝ signĂˇl - kulatĂ˝ tĂłn, ostrĂ˝ signĂˇl - ostrĂ˝ tĂłn");
+          var k = 2 * Fe;
+          Te(k),
+            1 == Fe && te(),
+            (t =
+              Fe <= 8
+                ? 500
+                : 32 != Fe
+                ? Math.round(1e3 / ((Fe + 1) / 2) + 1)
+                : 200),
+            Fe++;
+        } else if (Fe >= 33 && Fe <= 64) {
+          jazyk == Jazyk_anglicky
+            ? (Rt = "Smooth signal - smooth tone, sharp signal - sharp tone")
+            : jazyk == Jazyk_cesky &&
+              (Rt =
+                "KulatĂ˝ signĂˇl - kulatĂ˝ tĂłn, ostrĂ˝ signĂˇl - ostrĂ˝ tĂłn");
+          var k = 62 - 2 * (Fe - 33);
+          k < 1 && (k = 1),
+            64 == Fe
+              ? ((t = e), (Fe = 1), ae())
+              : 63 == Fe
+              ? ((t = 200), Fe++)
+              : ((t = 100), Fe++),
+            Te(k);
+        }
+      } else if (3 == tutorialLesson) {
+        var d = 1e3,
+          z = e - d;
+        if (0 == Fe)
+          Q(!1, !0, !1, !0, !1, !0, !1, !1, !1),
+            Te(bt / 2),
+            H(),
+            Je(25),
+            v(),
+            checkSound.checked
+              ? (Rt = "")
+              : jazyk == Jazyk_cesky
+              ? (Rt = "ZapnÄ›te prosĂ­m zvuk.")
+              : jazyk == Jazyk_anglicky && (Rt = "Turn the sound on, please."),
+            y();
+        else if (1 == Fe) H(), v(), te(), (t = d), Fe++;
+        else if (2 == Fe) ae(), (t = z), Fe++;
+        else if (3 == Fe) {
+          for (var g = (3 * bt) / 8; g < (4 * bt) / 8; g++)
+            St[g] = Math.sin((2 * Math.PI * 4) / 8);
+          v(), te(), (t = d), Fe++;
+        } else if (4 == Fe) ae(), (t = z), Fe++;
+        else if (5 == Fe) H(), v(), te(), (t = d), Fe++;
+        else if (6 == Fe) ae(), (t = z), Fe++;
+        else if (7 == Fe) {
+          for (var X = (1 * bt) / 8; X < (3 * bt) / 8; X++)
+            St[X] = Math.sin((2 * Math.PI * 1) / 8);
+          for (var m = (5 * bt) / 8; m < (7 * bt) / 8; m++)
+            St[m] = Math.sin((2 * Math.PI * 5) / 8);
+          v(), te(), (t = d), Fe++;
+        } else if (8 == Fe) ae(), (t = z), Fe++;
+        else if (9 == Fe) H(), v(), te(), (t = d), Fe++;
+        else if (10 == Fe) ae(), (t = z), Fe++;
+        else if (11 == Fe) {
+          for (var b = (3 * bt) / 8; b < (7 * bt) / 16; b++)
+            St[b] = Math.sin((2 * Math.PI * 1) / 4);
+          v(), te(), (t = d), Fe++;
+        } else if (12 == Fe) ae(), (t = z), Fe++;
+        else if (13 == Fe) H(), v(), te(), (t = d), Fe++;
+        else if (14 == Fe) ae(), (t = z), Fe++;
+        else if (15 == Fe) {
+          for (var S = (3 * bt) / 8; S < (7 * bt) / 16; S++)
+            St[S] = Math.sin((2 * Math.PI * 1) / 2);
+          v(), te(), (t = d), Fe++;
+        } else 16 == Fe && (ae(), (t = z), (Fe = 1));
+      } else if (4 == tutorialLesson) {
+        var d = 300,
+          z = 200,
+          M = 700;
+        0 == Fe
+          ? (Q(!1, !0, !1, !0, !1, !0, !1, !1, !1),
+            Te(10),
+            F(),
+            Je(25),
+            v(),
+            checkSound.checked
+              ? (Rt = "")
+              : jazyk == Jazyk_cesky
+              ? (Rt = "ZapnÄ›te prosĂ­m zvuk.")
+              : jazyk == Jazyk_anglicky && (Rt = "Turn the sound on, please."),
+            y())
+          : 1 == Fe
+          ? (q(),
+            jazyk == Jazyk_cesky
+              ? (Rt = "Pila")
+              : jazyk == Jazyk_anglicky && (Rt = "Sawtooth"),
+            Je(25),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 11 == Fe
+          ? (Z(),
+            jazyk == Jazyk_cesky
+              ? (Rt = "TrojĂşhelnĂ­k")
+              : jazyk == Jazyk_anglicky && (Rt = "Triangle"),
+            Je(25),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 21 == Fe
+          ? (H(),
+            jazyk == Jazyk_cesky
+              ? (Rt = "Sinus")
+              : jazyk == Jazyk_anglicky && (Rt = "Sine"),
+            Je(25),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 31 == Fe
+          ? (O(),
+            jazyk == Jazyk_cesky
+              ? (Rt = "ObdĂ©lnĂ­k")
+              : jazyk == Jazyk_anglicky && (Rt = "Square"),
+            Je(25),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 41 == Fe
+          ? (N(),
+            jazyk == Jazyk_cesky
+              ? (Rt = "Impuls")
+              : jazyk == Jazyk_anglicky && (Rt = "Impulse"),
+            Je(25),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 51 == Fe
+          ? (q(),
+            jazyk == Jazyk_cesky
+              ? (Rt = "Pila")
+              : jazyk == Jazyk_anglicky && (Rt = "Sawtooth"),
+            Je(25),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 61 == Fe
+          ? (p(1, 0, 0, !0),
+            jazyk == Jazyk_cesky
+              ? (Rt = "Pila bez 1. harmonickĂ©")
+              : jazyk == Jazyk_anglicky &&
+                (Rt = "Sawtooth without the 1st harmonic"),
+            Je(25),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 71 == Fe
+          ? (p(2, 0, 0, !0),
+            jazyk == Jazyk_cesky
+              ? (Rt = "Pila bez 2. harmonickĂ©")
+              : jazyk == Jazyk_anglicky &&
+                (Rt = "Sawtooth without the 2nd harmonic"),
+            Je(25),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 81 == Fe
+          ? (q(),
+            jazyk == Jazyk_cesky
+              ? (Rt = "Pila")
+              : jazyk == Jazyk_anglicky && (Rt = "Sawtooth"),
+            Je(25),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 91 == Fe
+          ? (p(0, 1, 0, !0),
+            jazyk == Jazyk_cesky
+              ? (Rt = "Pila s DC sloĹľkou")
+              : jazyk == Jazyk_anglicky && (Rt = "Sawtooth with DC bias"),
+            Je(25),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 100 == Fe
+          ? (ae(), (t = M), Fe++)
+          : 101 == Fe
+          ? (q(),
+            jazyk == Jazyk_cesky
+              ? (Rt = "Pila")
+              : jazyk == Jazyk_anglicky && (Rt = "Sawtooth"),
+            Je(32),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 102 == Fe
+          ? (ae(), (t = z), Fe++)
+          : 103 == Fe
+          ? (Je(30), te(), (t = d), Fe++)
+          : 104 == Fe
+          ? (ae(), (t = z), Fe++)
+          : 105 == Fe
+          ? (Je(29), te(), (t = d), Fe++)
+          : 106 == Fe
+          ? (ae(), (t = z), Fe++)
+          : 107 == Fe
+          ? (Je(27), te(), (t = d), Fe++)
+          : 108 == Fe
+          ? (ae(), (t = z), Fe++)
+          : 109 == Fe
+          ? (Je(25), te(), (t = d), Fe++)
+          : 110 == Fe
+          ? (ae(), (t = M), Fe++)
+          : 111 == Fe
+          ? (Je(13), te(), (t = d), Fe++)
+          : 112 == Fe
+          ? (ae(), (t = M), (Fe = 1))
+          : Fe % 10 == 2
+          ? (ae(), (t = z), Fe++)
+          : Fe % 10 == 3
+          ? (Je(27), te(), (t = d), Fe++)
+          : Fe % 10 == 4
+          ? (ae(), (t = z), Fe++)
+          : Fe % 10 == 5
+          ? (Je(25), te(), (t = d), Fe++)
+          : Fe % 10 == 6
+          ? (ae(), (t = z), Fe++)
+          : Fe % 10 == 7
+          ? (Je(24), te(), (t = d), Fe++)
+          : Fe % 10 == 8
+          ? (ae(), (t = z), Fe++)
+          : Fe % 10 == 9
+          ? (Je(25), te(), (t = d), Fe++)
+          : Fe % 10 == 0 && (ae(), (t = M), Fe++);
+      } else if (5 == tutorialLesson)
+        (t = 200),
+          0 == Fe
+            ? (Q(!1, !0, !1, !0, !1, !0, !1, !1, !1),
+              O(),
+              Je(18),
+              Te(64),
+              v(),
+              checkSound.checked
+                ? (Rt = "")
+                : jazyk == Jazyk_cesky
+                ? (Rt = "ZapnÄ›te prosĂ­m zvuk.")
+                : jazyk == Jazyk_anglicky &&
+                  (Rt = "Turn the sound on, please."),
+              y())
+            : 1 == Fe
+            ? (Je(18),
+              Te(64),
+              jazyk == Jazyk_anglicky
+                ? (Rt = "63 harmonics")
+                : jazyk == Jazyk_cesky && (Rt = "63 harmonickĂ˝ch"),
+              1 == Fe && (t = e),
+              Fe++,
+              y())
+            : Fe >= 2 && Fe <= 32
+            ? (2 == Fe
+                ? (jazyk == Jazyk_anglicky
+                    ? (Rt = "63 harmonics")
+                    : jazyk == Jazyk_cesky && (Rt = "63 harmonickĂ˝ch"),
+                  y())
+                : 10 == Fe &&
+                  (jazyk == Jazyk_anglicky
+                    ? (Rt = "Decreasing number of harmonics")
+                    : jazyk == Jazyk_cesky &&
+                      (Rt = "SniĹľuje se poÄŤet harmonickĂ˝ch"),
+                  y()),
+              Je(18 + Fe - 1),
+              32 == Fe && (t = e),
+              Fe++)
+            : 33 == Fe
+            ? (jazyk == Jazyk_anglicky
+                ? (Rt = "Original f0 with limited number of harmonics")
+                : jazyk == Jazyk_cesky &&
+                  (Rt = "PĹŻvodnĂ­ f0 s takto omezenĂ˝mi harmonickĂ˝mi"),
+              y(),
+              Je(18),
+              (Xn = harmonicSlider.value),
+              (t = 2 * e),
+              Fe++)
+            : 34 == Fe
+            ? (jazyk == Jazyk_anglicky
+                ? (Rt = "Compare: original f0, 63 harmonics")
+                : jazyk == Jazyk_cesky &&
+                  (Rt = "SrovnĂˇnĂ­: pĹŻvodnĂ­ f0, 63 harmonickĂ˝ch"),
+              Te(64),
+              y(),
+              (t = 2 * e),
+              Fe++)
+            : 35 == Fe &&
+              (jazyk == Jazyk_anglicky
+                ? (Rt = "Original f0 with limited number of harmonics")
+                : jazyk == Jazyk_cesky &&
+                  (Rt = "PĹŻvodnĂ­ f0 s omezenĂ˝mi harmonickĂ˝mi"),
+              Te(Xn),
+              y(),
+              (t = 2 * e),
+              (Fe = 1));
+      else if (6 == tutorialLesson)
+        (t = 200),
+          0 == Fe
+            ? (Q(!1, !0, !1, !0, !1, !0, !1, !1, !1),
+              O(),
+              Je(25),
+              Te(1),
+              v(),
+              checkSound.checked
+                ? (Rt = "")
+                : jazyk == Jazyk_cesky
+                ? (Rt = "ZapnÄ›te prosĂ­m zvuk.")
+                : jazyk == Jazyk_anglicky &&
+                  (Rt = "Turn the sound on, please."),
+              y())
+            : Fe >= 1 && Fe <= 31
+            ? (Te(2 * Fe), Fe++)
+            : Fe >= 32 &&
+              Fe <= 62 &&
+              (Te(62 - 2 * (Fe - 32)), Fe++, 60 == Fe && (Fe = 1));
+      else if (7 == tutorialLesson) {
+        var d = 500,
+          z = e - d,
+          M = e;
+        0 == Fe
+          ? (Q(!1, !0, !1, !0, !1, !0, !1, !1, !1),
+            Te(10),
+            F(),
+            Je(25),
+            v(),
+            checkSound.checked
+              ? (Rt = "")
+              : jazyk == Jazyk_cesky
+              ? (Rt = "ZapnÄ›te prosĂ­m zvuk.")
+              : jazyk == Jazyk_anglicky && (Rt = "Turn the sound on, please."),
+            y())
+          : 1 == Fe
+          ? (q(),
+            jazyk == Jazyk_cesky
+              ? (Rt = "Pila")
+              : jazyk == Jazyk_anglicky && (Rt = "Sawtooth"),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 11 == Fe
+          ? (R(),
+            jazyk == Jazyk_cesky
+              ? (Rt = "ObdĂ©lnĂ­k")
+              : jazyk == Jazyk_anglicky && (Rt = "Square"),
+            v(),
+            te(),
+            (t = d),
+            Fe++)
+          : 20 == Fe
+          ? (ae(), (t = M), (Fe = 1))
+          : Fe % 10 == 2
+          ? (ae(), (t = z), Fe++)
+          : Fe % 10 == 3
+          ? (jazyk == Jazyk_cesky
+              ? (Rt += ", nĂˇhodnĂ© fĂˇze.")
+              : jazyk == Jazyk_anglicky && (Rt += ", random phases."),
+            $(),
+            te(),
+            (t = d),
+            Fe++)
+          : Fe % 10 == 4
+          ? (ae(), (t = z), Fe++)
+          : Fe % 10 == 5
+          ? ($(), te(), (t = d), Fe++)
+          : Fe % 10 == 6
+          ? (ae(), (t = z), Fe++)
+          : Fe % 10 == 7
+          ? ($(), te(), (t = d), Fe++)
+          : Fe % 10 == 8
+          ? (ae(), (t = z), Fe++)
+          : Fe % 10 == 9
+          ? ($(), te(), (t = d), Fe++)
+          : Fe % 10 == 0 && (ae(), (t = M), Fe++);
+      } else if (8 == tutorialLesson)
+        if (((t = 250), 0 == Fe)) {
+          Q(!1, !0, !1, !0, !1, !0, !1, !1, !1),
+            ge(!0),
+            me(!1),
+            Ye(!1),
+            Te(bt / 2),
+            Z();
+          for (var w = (7 * bt) / 8; w <= bt; w++) St[w] = St[(7 * bt) / 8];
+          for (var P = (2 * bt) / 8; P <= (3 * bt) / 8; P++)
+            St[P] = St[(3 * bt) / 8];
+          v(),
+            checkSound.checked
+              ? (Rt = "")
+              : jazyk == Jazyk_cesky
+              ? (Rt = "MĹŻĹľete zapnout zvuk.")
+              : jazyk == Jazyk_anglicky && (Rt = "You can turn on the sound."),
+            p(8, 0.5, 0),
+            Je(25);
+        } else
+          Fe >= 1 &&
+            Fe <= 11 &&
+            (jazyk == Jazyk_anglicky
+              ? (Rt =
+                  "Lowering amplitude of noise component (band-stop filter)")
+              : jazyk == Jazyk_cesky &&
+                (Rt =
+                  "SniĹľovĂˇnĂ­ amplitudy ruĹˇivĂ© sloĹľky (filtr pĂˇsmovĂˇ zĂˇdrĹľ)"),
+            (xa[8] = 1 - 0.1 * (Fe - 1)),
+            v(),
+            (t = 300),
+            11 == Fe ? ((t = e), (Fe = 1)) : Fe++);
+      else if (9 == tutorialLesson)
+        0 == Fe &&
+          (Q(!1, !0, !1, !1, !1, !1, !1, !1, !1),
+          Te(10),
+          V(),
+          Je(1),
+          v(),
+          (gn = !0),
+          checkSound.checked
+            ? (Rt = "")
+            : jazyk == Jazyk_cesky
+            ? (Rt = "ZapnÄ›te prosĂ­m zvuk.")
+            : jazyk == Jazyk_anglicky && (Rt = "Turn the sound on, please."),
+          (btnTutorial.style.display = "none"),
+          y());
+      else if (10 == tutorialLesson)
+        0 == Fe &&
+          (F(),
+          Te(10),
+          Je(20),
+          p(1, 1.05, 0),
+          p(2, 0.65, 0),
+          p(3, 0.475, 0),
+          p(4, 0, 0),
+          p(5, 0.225, 0),
+          p(6, 0.15, 0),
+          p(7, 0, 0),
+          p(8, 0.1, 0),
+          p(9, 0.125, 0),
+          v(),
+          checkSound.checked
+            ? (Rt = "")
+            : jazyk == Jazyk_cesky
+            ? (Rt = "ZapnÄ›te zvuk a hrajte na klĂˇvesnici (Shift+)A-L.")
+            : jazyk == Jazyk_anglicky &&
+              (Rt = "Turn the sound on and play on keyboard (Shift+)A-L."),
+          (btnTutorial.style.display = "none"),
+          y());
+      else if (11 == tutorialLesson)
+        if (0 == Fe)
+          Q(!1, !1, !1, !1, !1, !0, !1, !1, !1), Te(bt / 2), N(), Je(25), v();
+        else if (Fe >= 1 && Fe <= 27) {
+          jazyk == Jazyk_anglicky
+            ? (Rt = "Perfectly tuned magnitudes of close frequencies.")
+            : jazyk == Jazyk_cesky &&
+              (Rt = "PeÄŤlivÄ› vyladÄ›nĂ© amplitudy blĂ­zkĂ˝ch frekvencĂ­.");
+          var k = Fe + 1;
+          Te(k), (t = Math.round(2e3 / k)), Fe++;
+        } else if (Fe >= 28 && Fe <= 37) {
+          var k = 10 * (Fe - 28) + 38;
+          (t = 50),
+            37 == Fe &&
+              ((t = e),
+              jazyk == Jazyk_anglicky
+                ? (Rt = "And perfectly tuned phases.")
+                : jazyk == Jazyk_cesky &&
+                  (Rt = "A peÄŤlivÄ› vyladÄ›nĂ© fĂˇze.")),
+            Fe++,
+            Te(k);
+        } else
+          Fe >= 38 && Fe <= 47
+            ? ((t = 25), Y(9, 1), Fe++)
+            : Fe >= 48 && Fe <= 57
+            ? ((t = 25), Y(9, -1), Fe++)
+            : Fe >= 58 && Fe <= 67
+            ? ((t = 25), Y(9, 1), Fe++)
+            : Fe >= 68 && Fe <= 77
+            ? ((t = 25), Y(9, -1), Fe++)
+            : Fe >= 78 && Fe <= 87
+            ? ((t = 25), Y(7, -1), Fe++)
+            : Fe >= 88 && Fe <= 97
+            ? ((t = 25), Y(7, 1), Fe++)
+            : Fe >= 98 && Fe <= 107
+            ? ((t = 25), Y(7, -1), Fe++)
+            : Fe >= 108 && Fe <= 117
+            ? ((t = 25), Y(7, 1), Fe++)
+            : Fe >= 118 && Fe <= 127
+            ? ((t = 25), Y(5, 1), Fe++)
+            : Fe >= 128 && Fe <= 137
+            ? ((t = 25), Y(5, -1), Fe++)
+            : Fe >= 138 && Fe <= 147
+            ? ((t = 25), Y(5, 1), Fe++)
+            : Fe >= 148 && Fe <= 157
+            ? ((t = 25), Y(5, -1), Fe++)
+            : Fe >= 158 && Fe <= 167
+            ? ((t = 25), Y(1, -1), Fe++)
+            : Fe >= 168 && Fe <= 177
+            ? ((t = 25), Y(1, 1), Fe++)
+            : Fe >= 178 && Fe <= 187
+            ? ((t = 25), Y(1, -1), Fe++)
+            : Fe >= 188 &&
+              Fe <= 197 &&
+              ((t = 25), Y(1, 1), 197 == Fe ? ((t = e), (Fe = 1)) : Fe++);
+      else if (12 == tutorialLesson) {
+        var _ = 300,
+          j = 1500;
+        if (
+          (checkSound.checked
+            ? (Rt = "")
+            : jazyk == Jazyk_cesky
+            ? (Rt = "ZapnÄ›te prosĂ­m zvuk.")
+            : jazyk == Jazyk_anglicky && (Rt = "Turn the sound on, please."),
+          0 == Fe)
+        )
+          Q(!1, !0, !1, !0, !1, !0, !1, !1, !1), Te(10), F(), Je(24), v();
+        else if (1 == Fe)
+          p(1, 2.6515, 0, !0),
+            p(2, 0.2112, 0, !0),
+            p(3, 0.03013, 0, !0),
+            p(4, 0.01173, 0, !0),
+            p(5, 0.004007, 0, !0),
+            p(6, 5 * 6584e-8, 0, !0),
+            p(7, 5 * 0.001258, 0, !0),
+            p(8, 0.009185, 0, !0),
+            p(9, 5 * 0.018519, 0, !0),
+            v(),
+            (t = _),
+            te(),
+            Fe++;
+        else if (2 == Fe) {
+          ae();
+          for (var J = 1; J <= 9; J++) p(J, 0, 0, !0);
+          v(!0), (t = j), Fe++;
+        } else if (3 == Fe)
+          p(1, 0.9065, 0, !0),
+            p(2, 5 * 0.2809, 0, !0),
+            p(3, 0.25335, 0, !0),
+            p(4, 0.1306, 0, !0),
+            p(5, 0.030915, 0, !0),
+            p(6, 5 * 0.01289, 0, !0),
+            p(7, 5 * 0.03593, 0, !0),
+            p(8, 0.106, 0, !0),
+            p(9, 0.123, 0, !0),
+            v(),
+            (t = _),
+            te(),
+            Fe++;
+        else if (4 == Fe) {
+          ae();
+          for (var T = 1; T <= 9; T++) p(T, 0, 0, !0);
+          v(!0), (t = j), Fe++;
+        } else if (5 == Fe)
+          p(1, 0.617, 0, !0),
+            p(2, 0.5595, 0, !0),
+            p(3, 0.983, 0, !0),
+            p(4, 5 * 0.168, 0, !0),
+            p(5, 0.37045, 0, !0),
+            p(6, 5 * 0.06842, 0, !0),
+            p(7, 0.0717, 0, !0),
+            p(8, 0.07305, 0, !0),
+            p(9, 0.05395, 0, !0),
+            v(),
+            (t = _),
+            te(),
+            Fe++;
+        else if (6 == Fe) {
+          ae();
+          for (var x = 1; x <= 9; x++) p(x, 0, 0, !0);
+          v(!0), (t = j), Fe++;
+        } else if (7 == Fe)
+          p(1, 5 * 0.1789, 0, !0),
+            p(2, 1.2705, 0, !0),
+            p(3, 1.188, 0, !0),
+            p(4, 5 * 0.03401, 0, !0),
+            p(5, 0, 0, !0),
+            p(6, 0.01065, 0, !0),
+            p(7, 0, 0, !0),
+            p(8, 0, 0, !0),
+            p(9, 0, 0, !0),
+            v(),
+            (t = _),
+            te(),
+            Fe++;
+        else if (8 == Fe) {
+          ae();
+          for (var I = 1; I <= 9; I++) p(I, 0, 0, !0);
+          v(!0), (t = j), Fe++;
+        } else if (9 == Fe)
+          p(1, 1.9074, 0, !0),
+            p(2, 0.3266, 0, !0),
+            p(3, 0.0528, 0, !0),
+            p(4, 0, 0, !0),
+            p(5, 0, 0, !0),
+            p(6, 0, 0, !0),
+            p(7, 0, 0, !0),
+            p(8, 0, 0, !0),
+            p(9, 0, 0, !0),
+            v(),
+            (t = _),
+            te(),
+            Fe++;
+        else if (10 == Fe) {
+          ae();
+          for (var A = 1; A <= 9; A++) p(A, 0, 0, !0);
+          v(!0), (t = j), Je(24 == f0Slider.value ? 23 : 24), (Fe = 1);
+        }
+      } else if (13 == tutorialLesson) {
+        if (0 == Fe)
+          Q(!1, !0, !1, !1, !1, !1, !1, !1, !1),
+            Te(bt / 2),
+            F(),
+            (nn = s(-6)),
+            v(),
+            checkSound.checked
+              ? (Rt = "")
+              : jazyk == Jazyk_cesky
+              ? (Rt = "ZapnÄ›te prosĂ­m zvuk.")
+              : jazyk == Jazyk_anglicky && (Rt = "Turn the sound on, please."),
+            y(),
+            (Rt = "");
+        else if (Fe >= 1 && Fe <= 24) {
+          var L = 55,
+            C = 5,
+            W = Math.sqrt(L * L * Math.pow(2, C)),
+            D = 1.9,
+            E = (Fe - 1) / 2;
+          if (Fe % 2 == 0) {
+            ae();
+            for (var B = 0; B <= C; B++) p(1 << B, 0, 0, !0);
+            v(!0), (t = 100);
+          } else {
+            nn = s(-6 + (Fe - 1) / 2 + 1 - 1);
+            for (var G = 0; G < C; G++) {
+              var K = L * Math.pow(2, E / 12) * Math.pow(2, G),
+                U = Math.exp(
+                  (-Math.pow(Math.log(K / W) / Math.log(2), 2) / 2) *
+                    Math.pow(D, 2)
+                );
+              p(1 << G, 1.8 * U, 0, !0);
+            }
+            v(), (t = 600), te();
+          }
+          24 == Fe ? (Fe = 1) : Fe++;
+        }
+      } else if (14 == tutorialLesson) {
+        var ee = 13.75;
+        if (0 == Fe)
+          Q(!1, !0, !1, !0, !1, !1, !1, !1, !1),
+            (Vt = 1),
+            Te(bt / 2),
+            F(),
+            (nn = ee),
+            (lblF0.textContent = we(nn)),
+            v(),
+            checkSound.checked
+              ? (Rt = "")
+              : jazyk == Jazyk_cesky
+              ? (Rt = "ZapnÄ›te prosĂ­m zvuk.")
+              : jazyk == Jazyk_anglicky && (Rt = "Turn the sound on, please."),
+            y(),
+            (Rt = "");
+        else if (Fe >= 1 && Fe <= 24) {
+          if (Fe % 2 == 0) ae(), (t = 100);
+          else {
+            var ie = Math.pow(2, 1 / 12);
+            (nn = ee * Math.pow(ie, (Fe - 1) / 2)),
+              (lblF0.textContent = we(nn));
+            for (
+              var le = 10,
+                re = 12,
+                oe = (Fe - 1) / 2,
+                se = 0.01,
+                fe = 1,
+                ce = 0;
+              ce < le;
+              ce++
+            ) {
+              var ue = (2 * Math.PI * (ce * re + oe)) / (re * le),
+                ye = se + ((fe - se) * (1 - Math.cos(ue))) / 2;
+              p(1 << ce, 0.5 * ye, 0, !0);
+            }
+            v(), (t = 600), te();
+          }
+          24 == Fe ? (Fe = 1) : Fe++;
+        }
+      } else if (15 == tutorialLesson)
+        if (0 == Fe) {
+          if (
+            (Q(!1, !0, !1, !0, !1, !0, !1, !1, !1),
+            ge(!0),
+            me(!1),
+            Ye(!1),
+            Te(bt / 2),
+            bt < 128)
+          )
+            return (
+              F(), v(), (Rt = "Problem: N < 128. Please, change it."), void y()
+            );
+          for (var he = new Array(bt), ke = 0; ke < (70 * bt) / 256; ke++)
+            he[ke] = 1;
+          for (var de = (70 * bt) / 256; de < (100 * bt) / 256; de++)
+            he[de] = -3;
+          for (var ve = (100 * bt) / 256; ve < (156 * bt) / 256; ve++)
+            he[ve] = -0.7;
+          for (var pe = (156 * bt) / 256; pe < (226 * bt) / 256; pe++)
+            he[pe] = 1.16;
+          for (var ze = (226 * bt) / 256; ze < (256 * bt) / 256; ze++)
+            he[ze] = -0.76;
+          var Xe = new Array(bt);
+          (Xe[0] = he[0]), (St[0] = Xe[0]);
+          for (var be = 1; be < bt; be++)
+            (Xe[be] = Xe[be - 1] + he[be]), (St[be] = St[be - 1] + Xe[be]);
+          for (var Se = 0; Se < bt; Se++)
+            St[Se] = (-St[Se] / 3267 / (bt / 256) / (bt / 256)) * 1.5 + 1.6;
+          for (var Me = (10 * bt) / 128; Me <= (14 * bt) / 128; Me++)
+            St[Me] = St[Me] + 0.3;
+          for (var Pe = (26 * bt) / 128; Pe <= (30 * bt) / 128; Pe++)
+            St[Pe] = St[Pe] + 0.3;
+          for (var _e = (34 * bt) / 128; _e <= (38 * bt) / 128; _e++)
+            St[_e] = St[_e] + 0.3;
+          for (var je = (62 * bt) / 128; je <= (66 * bt) / 128; je++)
+            St[je] = St[je] + 0.3;
+          for (var xe = (80 * bt) / 128; xe <= (84 * bt) / 128; xe++)
+            St[xe] = St[xe] + 0.3;
+          for (var Ie = (110 * bt) / 128; Ie <= (114 * bt) / 128; Ie++)
+            St[Ie] = St[Ie] + 0.3;
+          Je(25),
+            v(),
+            checkSound.checked
+              ? (Rt = "")
+              : jazyk == Jazyk_cesky
+              ? (Rt = "MĹŻĹľete zapnout zvuk.")
+              : jazyk == Jazyk_anglicky && (Rt = "You can turn on the sound."),
+            y();
+        } else
+          Fe >= 1 &&
+            Fe <= 11 &&
+            (jazyk == Jazyk_anglicky
+              ? (Rt =
+                  "Lowering amplitude of noise component (high-pass filter)")
+              : jazyk == Jazyk_cesky &&
+                (Rt =
+                  "SniĹľovĂˇnĂ­ amplitudy ruĹˇivĂ© sloĹľky (filtr hornĂ­ propust)"),
+            (xa[0] = 1 - 0.1 * (Fe - 1)),
+            (xa[1] = 1 - 0.1 * (Fe - 1)),
+            (xa[2] = 1 - 0.1 * (Fe - 1)),
+            (xa[3] = 1 - 0.1 * (Fe - 1)),
+            (xa[4] = 1 - 0.1 * (Fe - 1)),
+            v(),
+            (t = 300),
+            11 == Fe ? ((t = e), (Fe = 1)) : Fe++);
+      else if (16 == tutorialLesson)
+        if (0 == Fe) {
+          Q(!1, !0, !1, !0, !1, !0, !1, !1, !1),
+            ge(!0),
+            me(!1),
+            Ye(!1),
+            Te(bt / 2),
+            O(),
+            Je(25),
+            v();
+          for (var Ae = 2; Ae <= 7; Ae++) p(Ae, 0, 0, !0);
+          p(8, 0.3, 2.8, !0),
+            p(9, 0.1, 5, !0),
+            p(1, 1, 0, !0),
+            v(),
+            checkSound.checked
+              ? (Rt = "")
+              : jazyk == Jazyk_cesky
+              ? (Rt = "MĹŻĹľete zapnout zvuk.")
+              : jazyk == Jazyk_anglicky && (Rt = "You can turn on the sound."),
+            y();
+        } else
+          Fe >= 1 &&
+            Fe <= 11 &&
+            (jazyk == Jazyk_anglicky
+              ? (Rt = "Lowering amplitude of noise component (low-pass filter)")
+              : jazyk == Jazyk_cesky &&
+                (Rt =
+                  "SniĹľovĂˇnĂ­ amplitudy ruĹˇivĂ© sloĹľky (filtr dolnĂ­ propust)"),
+            (xa[10] = 1 - 0.1 * (Fe - 1)),
+            (xa[9] = 1 - 0.1 * (Fe - 1)),
+            (xa[8] = 1 - 0.1 * (Fe - 1)),
+            v(),
+            (t = 300),
+            11 == Fe ? ((t = e), (Fe = 1)) : Fe++);
+      0 != Fe && 0 != t && setTimeout(ne, t);
+    }
+    function ie() {
+      F(), v();
+    }
+    function le() {
+      D(), v();
+    }
+    function re() {
+      H(), v();
+    }
+    function oe() {
+      O(), v();
+    }
+    function se() {
+      R(), v();
+    }
+    function fe() {
+      V(), v();
+    }
+    function ce() {
+      q(), v();
+    }
+    function ue() {
+      Z(), v();
+    }
+    function ye() {
+      N(), v();
+    }
+    function he() {
+      E(), v();
+    }
+    function ke(e) {
+      g(e), (lblHarmonicke.textContent = Et - 1);
+    }
+    function de() {
+      g(qt), (lblHarmonicke.textContent = Et - 1), (harmonicSlider.value = Et);
+    }
+    function ve(e) {
+      return Ze
+        ? ((Ne = e), void (Ne && Ve ? i() : l()))
+        : ((checkSound.checked = !1), void (Ne = !1));
+    }
+    function pe() {
+      (checkSound.checked = !checkSound.checked), ve(checkSound.checked);
+    }
+    function ze() {
+      (radioSound1.checked = !radioSound1.checked),
+        (radioSound2.checked = !radioSound1.checked),
+        Ye(radioSound1.checked);
+    }
+    function Ye(e) {
+      Ze && ((Ge = !e), Ne && f());
+    }
+    function ge(e) {
+      (De = e),
+        (Gt = De ? Bt : Nt),
+        De ? (me(!0), b()) : (me(!1), Ne && f(), y());
+    }
+    function Xe() {
+      (Fe = 1), ne(), (btnTutorial.style.display = "none");
+    }
+    function me(e) {
+      e
+        ? ((btnSnd12.style.display = "inline"),
+          (radioSound1.style.display = "inline"),
+          (radioSound2.style.display = "inline"))
+        : ((btnSnd12.style.display = "none"),
+          (radioSound1.style.display = "none"),
+          (radioSound2.style.display = "none"));
+    }
+    function be() {
+      (checkFreqResp.checked = !checkFreqResp.checked),
+        ge(checkFreqResp.checked);
+    }
+    function Se(e) {
+      (on = r(e)), Ne && f();
+    }
+    function Me(e) {
+      (nn = s(e)), (lblF0.textContent = we(nn)), Ne && f();
+    }
+    function we(e) {
+      return +(Math.round(e + "e+1") + "e-1");
+    }
+    function Pe() {
+      return 1;
+    }
+    function _e() {
+      return 49;
+    }
+    function je() {
+      return 25;
+    }
+    function Je(e) {
+      (f0Slider.value = e), Me(e);
+    }
+    function Te(e) {
+      g(e), (lblHarmonicke.textContent = Et - 1), (harmonicSlider.value = Et);
+    }
+    var xe = a(1),
+      Ie = n(xe),
+      Ae = a(3),
+      Le = n(Ae),
+      Ce = a(2),
+      We = n(Ce),
+      Fe = 0,
+      De = !1,
+      He = !1,
+      Oe = !0,
+      Re = !1,
+      qe = 0.002,
+      Ee = 0.002,
+      Ze = !0,
+      Ve = !0,
+      Ne = !1,
+      Be = !0,
+      Ge = !1,
+      Ke = "",
+      Ue = 0,
+      Qe = "normal 11pt Calibri",
+      $e = "bold 16pt Calibri",
+      et = "#ffffff",
+      tt = "#0000ff",
+      at = "#ff0000",
+      nt = "#808080",
+      it = "#0000ff",
+      lt = "#808080",
+      rt = "#000000",
+      ot = "#000000",
+      st = 30,
+      ft = 80,
+      ct = 110,
+      ut = 100,
+      yt = !0,
+      ht = "#000000",
+      kt = "#808080",
+      dt = "#000000",
+      vt = "#808080",
+      pt = "#000000",
+      zt = "#000000",
+      Yt = "#8080ff",
+      gt = "#ff0000",
+      Xt = "#808080",
+      mt = "#000000",
+      bt = 256;
+    tutorialOn && 14 == tutorialLesson && (bt = 2048);
+    for (
+      var St = new Array(bt).fill(0),
+        Mt = new Array(2 * bt).fill(0),
+        wt = new Array(bt).fill(0),
+        Pt = new Array(bt).fill(0),
+        _t = new Array(2 * bt).fill(0),
+        jt = new Array(bt).fill(0),
+        Jt = new Array(bt).fill(0),
+        Tt = new Array(bt).fill(0),
+        xt = new Array(bt / 2),
+        It = 0;
+      It < bt / 2;
+      It++
+    )
+      xt[It] = new Array(bt).fill(0);
+    for (
+      var At = new Array(bt).fill(0),
+        Lt = new Array(2 * bt).fill(0),
+        Ct = new C(bt),
+        Wt = 0,
+        Ft = 0,
+        Dt = -1,
+        Ht = -1,
+        Ot = !1,
+        Rt = "",
+        qt = 10,
+        Et = 10,
+        Zt = 0,
+        Vt = 2,
+        Nt = 64,
+        Bt = 32,
+        Gt = De ? Bt : Nt,
+        Kt = 0.01,
+        Ut = 4,
+        Qt = 10,
+        $t = 2,
+        ea = $t / 10,
+        ta = ($t / qt) * 0.5,
+        aa = 0.5,
+        na = 2,
+        ia = new Array(bt / 2),
+        la = new Array(bt / 2),
+        ra = new Array(bt / 2),
+        oa = new Array(bt / 2),
+        sa = 0;
+      sa < bt / 2;
+      sa++
+    )
+      (ia[sa] = new Array(4).fill(0)),
+        (la[sa] = new Array(4).fill(0)),
+        (ra[sa] = new Array(4).fill(0)),
+        (oa[sa] = new Array(4).fill(0));
+    for (
+      var fa = new Array(4).fill(0),
+        ca = new Array(4).fill(0),
+        ua = -1,
+        ya = -1,
+        ha = 0,
+        ka = 0,
+        da = !1,
+        va = !1,
+        pa = !1,
+        za = 0,
+        Ya = 0,
+        ga = 0,
+        Xa = 0,
+        ma = 1,
+        ba = 0,
+        Sa = 0,
+        Ma = -1,
+        wa = -1,
+        Pa = new Array(bt).fill(0),
+        _a = new Array(bt / 2),
+        ja = 0;
+      ja < bt / 2;
+      ja++
+    )
+      _a[ja] = new Array(bt).fill(0);
+    for (
+      var Ja = new Array(bt).fill(0),
+        Ta = new Array(2 * bt).fill(0),
+        xa = new Array(bt).fill(1),
+        Ia = new Array(bt).fill(0),
+        Aa = qt,
+        La = Et,
+        Ca = Zt,
+        Wa = new Array(bt / 2),
+        Fa = new Array(bt / 2),
+        Da = new Array(bt / 2),
+        Ha = new Array(bt / 2),
+        Oa = 0;
+      Oa < bt / 2;
+      Oa++
+    )
+      (Wa[Oa] = new Array(4).fill(0)),
+        (Fa[Oa] = new Array(4).fill(0)),
+        (Da[Oa] = new Array(4).fill(0)),
+        (Ha[Oa] = new Array(4).fill(0));
+    var Ra,
+      qa,
+      Ea,
+      Za,
+      Va,
+      Na,
+      Ba,
+      Ga = -1,
+      Ka = -1,
+      Ua = -1,
+      Qa = -1,
+      $a = 0,
+      en = 0,
+      tn = window.AudioContext || window.webkitAudioContext,
+      an = 0,
+      nn = s(je()),
+      ln = 20,
+      rn = 2,
+      on = r(15),
+      sn = !1,
+      fn = 0.554,
+      cn = 0.75,
+      un = Math.asin(Math.tan((15 / 180) * Math.PI)),
+      yn = 0.25 * Math.PI,
+      hn = Math.cos(yn),
+      kn = 0,
+      dn = -Math.sin(yn),
+      vn = Math.sin(un) * Math.sin(yn),
+      pn = Math.cos(un),
+      zn = Math.cos(yn) * Math.sin(un);
+    Le.default.onTouchstart(function (e) {
+      U(e), K(e);
+    }),
+      Le.default.onTouchend(function (e) {
+        G(e);
+      }),
+      Le.default.onTouchcancel(function (e) {
+        G(e);
+      }),
+      Le.default.onTouchmove(function (e) {
+        U(e);
+      });
+    var Yn = !1;
+    Le.default.onClick(function (e) {}),
+      Le.default.onDblclick(function (e) {
+        B(e);
+      }),
+      Le.default.onMousedown(function (e) {
+        K(e);
+      }),
+      Le.default.onMouseup(function (e) {
+        G(e);
+      }),
+      Le.default.onMove(function (e) {
+        U(e);
+      });
+    var gn = !1,
+      Xn = 0;
+    Ie.default.onResize(function () {
+      y();
+    }),
+      jazyk == Jazyk_cesky
+        ? Ie.default.appendToControlPanel(
+            (0, We.default)(
+              "div",
+              null,
+              (0, We.default)(
+                "a2",
+                { href: "#", id: "btnTutorial", onclick: Xe },
+                "Start"
+              ),
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btn1", onclick: ie },
+                "Smazat"
+              ),
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btn2", onclick: le },
+                "Cosinus"
+              ),
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btn3", onclick: re },
+                "Sinus"
+              ),
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btn4", onclick: oe },
+                "ObdĂ©lnĂ­k (sin)"
+              ),
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btn5", onclick: se },
+                "ObdĂ©lnĂ­k (cos)"
+              ),
+              (0, We.default)(
+                "label",
+                { id: "lblTxtHarmonicke" },
+                "HarmonickĂ©"
+              ),
+              "Â ",
+              (0, We.default)("input", {
+                id: "harmonicSlider",
+                type: "range",
+                value: Et,
+                min: "1",
+                max: bt / 2,
+                oninput: function (e) {
+                  return ke(e.target.value);
+                },
+                onchange: function (e) {
+                  return ke(e.target.value);
+                }
+              }),
+              (0, We.default)(
+                "label",
+                null,
+                (0, We.default)("span", { id: "lblHarmonicke" }, Et - 1)
+              ),
+              " Â ",
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btnDefault9", onclick: de },
+                "VĂ˝chozĂ­"
+              ),
+              (0, We.default)(
+                "label",
+                { id: "lblFreqResp", onclick: be },
+                "FrekvenÄŤnĂ­ charakteristika"
+              ),
+              (0, We.default)("input", {
+                id: "checkFreqResp",
+                type: "checkbox",
+                onchange: function (e) {
+                  return ge(e.target.checked);
+                }
+              }),
+              (0, We.default)("br", null),
+              (0, We.default)(
+                "span",
+                null,
+                (0, We.default)(
+                  "a1",
+                  { href: "#", id: "btn6", onclick: fe },
+                  "RĂˇzy"
+                ),
+                (0, We.default)(
+                  "a1",
+                  { href: "#", id: "btn7", onclick: ce },
+                  "Pila"
+                ),
+                (0, We.default)(
+                  "a1",
+                  { href: "#", id: "btn8", onclick: ue },
+                  "TrojĂşhelnĂ­k"
+                ),
+                (0, We.default)(
+                  "a1",
+                  { href: "#", id: "btn9", onclick: ye },
+                  "Impuls"
+                ),
+                (0, We.default)(
+                  "a1",
+                  { href: "#", id: "btn10", onclick: he },
+                  "Pila 2"
+                ),
+                (0, We.default)("label", { id: "lblSnd", onclick: pe }, "Zvuk"),
+                (0, We.default)("input", {
+                  id: "checkSound",
+                  type: "checkbox",
+                  onchange: function (e) {
+                    return ve(e.target.checked);
+                  }
+                }),
+                " Â ",
+                (0, We.default)(
+                  "label",
+                  { id: "btnSnd12", onclick: ze },
+                  "Vstup / vĂ˝stup"
+                ),
+                (0, We.default)("input", {
+                  id: "radioSound1",
+                  type: "radio",
+                  name: "snd12",
+                  checked: "checked",
+                  onchange: function (e) {
+                    return Ye(e.target.checked);
+                  }
+                }),
+                (0, We.default)("input", {
+                  id: "radioSound2",
+                  type: "radio",
+                  name: "snd12",
+                  onchange: function (e) {
+                    return Ye(!e.target.checked);
+                  }
+                }),
+                " Â ",
+                (0, We.default)("label", { id: "lblHlasitost" }, "Hlasitost"),
+                (0, We.default)("input", {
+                  id: "volumeSlider",
+                  type: "range",
+                  value: "15",
+                  min: "0",
+                  max: ln,
+                  oninput: function (e) {
+                    return Se(e.target.value);
+                  },
+                  onchange: function (e) {
+                    return Se(e.target.value);
+                  }
+                }),
+                " Â ",
+                (0, We.default)("label", { id: "lblTxtF0" }, "f0"),
+                (0, We.default)("input", {
+                  id: "f0Slider",
+                  type: "range",
+                  value: je(),
+                  min: Pe(),
+                  max: _e(),
+                  oninput: function (e) {
+                    return Me(e.target.value);
+                  },
+                  onchange: function (e) {
+                    return Me(e.target.value);
+                  }
+                }),
+                (0, We.default)(
+                  "label",
+                  { id: "lblTxtHz" },
+                  (0, We.default)("span", { id: "lblF0" }, we(nn)),
+                  " Hz"
+                ),
+                " Â ",
+                (0, We.default)(
+                  "label",
+                  null,
+                  (0, We.default)("span", { id: "lblFs" })
+                )
+              ),
+              (0, We.default)("br", null),
+              (0, We.default)(
+                "a",
+                { href: "https://tomasboril.cz/fourierseries3d/" },
+                "https://tomasboril.cz/fourierseries3d/"
+              ),
+              " ",
+              (0, We.default)(
+                "label_normal",
+                null,
+                "(c) TomĂˇĹˇ BoĹ™il, borilt@gmail.com, 2016 Praha, v1.00. JavaScript & Canvas template: Filip PaulĹŻ."
+              )
+            )
+          )
+        : jazyk == Jazyk_anglicky &&
+          Ie.default.appendToControlPanel(
+            (0, We.default)(
+              "div",
+              null,
+              (0, We.default)(
+                "a2",
+                { href: "#", id: "btnTutorial", onclick: Xe },
+                "Start"
+              ),
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btn1", onclick: ie },
+                "Clear"
+              ),
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btn2", onclick: le },
+                "Cosine"
+              ),
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btn3", onclick: re },
+                "Sine"
+              ),
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btn4", onclick: oe },
+                "Square (sin)"
+              ),
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btn5", onclick: se },
+                "Square (cos)"
+              ),
+              (0, We.default)("label", { id: "lblTxtHarmonicke" }, "Harmonics"),
+              "Â ",
+              (0, We.default)("input", {
+                id: "harmonicSlider",
+                type: "range",
+                value: Et,
+                min: "1",
+                max: bt / 2,
+                oninput: function (e) {
+                  return ke(e.target.value);
+                },
+                onchange: function (e) {
+                  return ke(e.target.value);
+                }
+              }),
+              (0, We.default)(
+                "label",
+                null,
+                (0, We.default)("span", { id: "lblHarmonicke" }, Et - 1)
+              ),
+              " Â ",
+              (0, We.default)(
+                "a1",
+                { href: "#", id: "btnDefault9", onclick: de },
+                "Default"
+              ),
+              (0, We.default)(
+                "label",
+                { id: "lblFreqResp", onclick: be },
+                "Frequency response"
+              ),
+              (0, We.default)("input", {
+                id: "checkFreqResp",
+                type: "checkbox",
+                onchange: function (e) {
+                  return ge(e.target.checked);
+                }
+              }),
+              (0, We.default)("br", null),
+              (0, We.default)(
+                "span",
+                null,
+                (0, We.default)(
+                  "a1",
+                  { href: "#", id: "btn6", onclick: fe },
+                  "Beats"
+                ),
+                (0, We.default)(
+                  "a1",
+                  { href: "#", id: "btn7", onclick: ce },
+                  "Sawtooth"
+                ),
+                (0, We.default)(
+                  "a1",
+                  { href: "#", id: "btn8", onclick: ue },
+                  "Triangle"
+                ),
+                (0, We.default)(
+                  "a1",
+                  { href: "#", id: "btn9", onclick: ye },
+                  "Impulse"
+                ),
+                (0, We.default)(
+                  "a1",
+                  { href: "#", id: "btn10", onclick: he },
+                  "Sawtooth 2"
+                ),
+                (0, We.default)(
+                  "label",
+                  { id: "lblSnd", onclick: pe },
+                  "Sound"
+                ),
+                (0, We.default)("input", {
+                  id: "checkSound",
+                  type: "checkbox",
+                  onchange: function (e) {
+                    return ve(e.target.checked);
+                  }
+                }),
+                " Â ",
+                (0, We.default)(
+                  "label",
+                  { id: "btnSnd12", onclick: ze },
+                  "Input / Output"
+                ),
+                (0, We.default)("input", {
+                  id: "radioSound1",
+                  type: "radio",
+                  name: "snd12",
+                  checked: "checked",
+                  onchange: function (e) {
+                    return Ye(e.target.checked);
+                  }
+                }),
+                (0, We.default)("input", {
+                  id: "radioSound2",
+                  type: "radio",
+                  name: "snd12",
+                  onchange: function (e) {
+                    return Ye(!e.target.checked);
+                  }
+                }),
+                " Â ",
+                (0, We.default)("label", { id: "lblHlasitost" }, "Volume"),
+                (0, We.default)("input", {
+                  id: "volumeSlider",
+                  type: "range",
+                  value: "15",
+                  min: "0",
+                  max: ln,
+                  oninput: function (e) {
+                    return Se(e.target.value);
+                  },
+                  onchange: function (e) {
+                    return Se(e.target.value);
+                  }
+                }),
+                " Â ",
+                (0, We.default)("label", { id: "lblTxtF0" }, "f0"),
+                (0, We.default)("input", {
+                  id: "f0Slider",
+                  type: "range",
+                  value: je(),
+                  min: Pe(),
+                  max: _e(),
+                  oninput: function (e) {
+                    return Me(e.target.value);
+                  },
+                  onchange: function (e) {
+                    return Me(e.target.value);
+                  }
+                }),
+                (0, We.default)(
+                  "label",
+                  { id: "lblTxtHz" },
+                  (0, We.default)("span", { id: "lblF0" }, we(nn)),
+                  " Hz"
+                ),
+                " Â ",
+                (0, We.default)(
+                  "label",
+                  null,
+                  (0, We.default)("span", { id: "lblFs" })
+                )
+              ),
+              (0, We.default)("br", null),
+              (0, We.default)(
+                "a",
+                { href: "https://tomasboril.cz/fourierseries3d/" },
+                "https://tomasboril.cz/fourierseries3d/"
+              ),
+              " ",
+              (0, We.default)(
+                "label_normal",
+                null,
+                "(c) TomĂˇĹˇ BoĹ™il, borilt@gmail.com, 2016 Prague, v1.00. JavaScript & Canvas template: Filip PaulĹŻ."
+              )
+            )
+          ),
+      De ? (checkFreqResp.checked = !0) : me(!1),
+      document.addEventListener("keyup", function (e) {
+        var t = e.key;
+        if (
+          !Re &&
+          "ArrowLeft" != t &&
+          "ArrowRight" != t &&
+          "ArrowUp" != t &&
+          "ArrowDown" != t
+        ) {
+          if ("Shift" == t) return void (Ue = 0);
+          var a = t.toLowerCase();
+          1 == checkSound.checked &&
+            1 == Ne &&
+            Ke == a &&
+            ((Ne = !1), l(), (Ke = ""));
+        }
+      }),
+      document.addEventListener("keydown", function (e) {
+        var t = e.key;
+        if (!Re) {
+          if ("Shift" == t) return void (Ue = -12);
+          var a = t.toLowerCase();
+          if (Ke != a || 1 != Ne) {
+            if (((Ke = a), "a" == a)) Je(21 + Ue);
+            else if ("w" == a) Je(22 + Ue);
+            else if ("s" == a) Je(23 + Ue);
+            else if ("e" == a) Je(24 + Ue);
+            else if ("d" == a) Je(25 + Ue);
+            else if ("f" == a) Je(26 + Ue);
+            else if ("t" == a) Je(27 + Ue);
+            else if ("g" == a) Je(28 + Ue);
+            else if ("y" == a || "z" == a) Je(29 + Ue);
+            else if ("h" == a) Je(30 + Ue);
+            else if ("u" == a) Je(31 + Ue);
+            else if ("j" == a) Je(32 + Ue);
+            else if ("k" == a) Je(33 + Ue);
+            else if ("o" == a) Je(34 + Ue);
+            else if ("l" == a) Je(35 + Ue);
+            else {
+              if ("p" != a) return;
+              Je(36 + Ue);
+            }
+            1 == checkSound.checked && 0 == Ne && ((Ne = !0), l());
+          }
+        }
+      }),
+      y(),
+      tutorialOn
+        ? (F(), v(), ne())
+        : ((btnTutorial.style.display = "none"), O(), v());
+  },
+  function (e, t, a) {
+    "use strict";
+    function n(e) {
+      return e && e.__esModule ? e : { default: e };
+    }
+    function i(e, t) {
+      if (!(e instanceof t))
+        throw new TypeError("Cannot call a class as a function");
+    }
+    Object.defineProperty(t, "__esModule", { value: !0 });
+    var l = (function () {
+        function e(e, t) {
+          for (var a = 0; a < t.length; a++) {
+            var n = t[a];
+            (n.enumerable = n.enumerable || !1),
+              (n.configurable = !0),
+              "value" in n && (n.writable = !0),
+              Object.defineProperty(e, n.key, n);
+          }
+        }
+        return function (t, a, n) {
+          return a && e(t.prototype, a), n && e(t, n), t;
+        };
+      })(),
+      r = a(2),
+      o = n(r),
+      s = (function () {
+        function e() {
+          i(this, e),
+            (this.main = this.getId("main")),
+            (this.canvas = (0, o.default)("canvas", null)),
+            (this.controlPanel = (0, o.default)("div", {
+              className: "controlPanel"
+            })),
+            this.append(
+              this.main,
+              (0, o.default)("div", null, this.canvas, this.controlPanel)
+            ),
+            window.addEventListener("resize", this.handleResize.bind(this)),
+            this.handleResize();
+        }
+        return (
+          l(e, [
+            {
+              key: "onResize",
+              value: function (e) {
+                window.addEventListener("resize", e);
+              }
+            },
+            {
+              key: "append",
+              value: function (e, t) {
+                e.appendChild(t);
+              }
+            },
+            {
+              key: "appendToControlPanel",
+              value: function (e) {
+                this.append(this.controlPanel, e);
+              }
+            },
+            {
+              key: "getId",
+              value: function (e) {
+                return document.getElementById(e);
+              }
+            },
+            {
+              key: "getBodySize",
+              value: function () {
+                return { width: window.innerWidth, height: window.innerHeight };
+              }
+            },
+            {
+              key: "handleResize",
+              value: function () {
+                var e = this.getBodySize(),
+                  t = e.width,
+                  a = e.height,
+                  n = 125;
+                (this.canvas.width = t), (this.canvas.height = a - n);
+              }
+            }
+          ]),
+          e
+        );
+      })();
+    t.default = new s();
+  },
+  function (e, t) {
+    "use strict";
+    function a(e, t) {
+      var a = void 0;
+      a =
+        "svg" == e || "g" == e || "polygon" == e || "path" == e
+          ? document.createElementNS("http://www.w3.org/2000/svg", e)
+          : document.createElement(e);
+      for (var n in t)
+        if ("style" == n) for (var i in t[n]) a.style[i] = t[n][i];
+        else
+          "svg" == e || "g" == e || "polygon" == e || "path" == e
+            ? "onclick" == n
+              ? (a.onclick = t[n])
+              : a.setAttribute(n, t[n])
+            : "onmousewheel" == n
+            ? (a.addEventListener("mousewheel", mouseWheelHandler(t[n]), !1),
+              a.addEventListener("DOMMouseScroll", mouseWheelHandler(t[n]), !1))
+            : (a[n] = t[n]);
+      var l = [];
+      for (var r in arguments) l.push(arguments[r]);
+      return (
+        l.splice(0, 2),
+        Array.isArray(l[0]) && (l = l[0]),
+        l.forEach(function (e) {
+          "undefined" != typeof e &&
+            (("string" != typeof e && "number" != typeof e) ||
+              (e = document.createTextNode(e)),
+            a.appendChild(e));
+        }),
+        a
+      );
+    }
+    Object.defineProperty(t, "__esModule", { value: !0 }), (t.default = a);
+  },
+  function (e, t, a) {
+    "use strict";
+    function n(e) {
+      return e && e.__esModule ? e : { default: e };
+    }
+    function i(e, t) {
+      if (!(e instanceof t))
+        throw new TypeError("Cannot call a class as a function");
+    }
+    Object.defineProperty(t, "__esModule", { value: !0 });
+    var l = (function () {
+        function e(e, t) {
+          for (var a = 0; a < t.length; a++) {
+            var n = t[a];
+            (n.enumerable = n.enumerable || !1),
+              (n.configurable = !0),
+              "value" in n && (n.writable = !0),
+              Object.defineProperty(e, n.key, n);
+          }
+        }
+        return function (t, a, n) {
+          return a && e(t.prototype, a), n && e(t, n), t;
+        };
+      })(),
+      r = a(1),
+      o = n(r),
+      s = (function () {
+        function e() {
+          i(this, e),
+            (this.canvas = o.default.canvas),
+            (this.context = this.canvas.getContext("2d"));
+        }
+        return (
+          l(e, [
+            {
+              key: "onClick",
+              value: function (e) {
+                this.canvas.onclick = function (t) {
+                  e([t.pageX, t.pageY]), t.preventDefault();
+                };
+              }
+            },
+            {
+              key: "onDblclick",
+              value: function (e) {
+                this.canvas.ondblclick = function (t) {
+                  e([t.pageX, t.pageY]), t.preventDefault();
+                };
+              }
+            },
+            {
+              key: "onDragstart",
+              value: function (e) {
+                this.canvas.ondragstart = function (t) {
+                  e([t.pageX, t.pageY]), t.preventDefault();
+                };
+              }
+            },
+            {
+              key: "onMousedown",
+              value: function (e) {
+                this.canvas.onmousedown = function (t) {
+                  e([t.pageX, t.pageY]), t.preventDefault();
+                };
+              }
+            },
+            {
+              key: "onMouseup",
+              value: function (e) {
+                this.canvas.onmouseup = function (t) {
+                  e([t.pageX, t.pageY]), t.preventDefault();
+                };
+              }
+            },
+            {
+              key: "onMove",
+              value: function (e) {
+                this.canvas.onmousemove = function (t) {
+                  e([t.pageX, t.pageY]), t.preventDefault();
+                };
+              }
+            },
+            {
+              key: "onTouchstart",
+              value: function (e) {
+                this.canvas.ontouchstart = function (t) {
+                  e([t.changedTouches[0].pageX, t.changedTouches[0].pageY]),
+                    t.preventDefault();
+                };
+              }
+            },
+            {
+              key: "onTouchend",
+              value: function (e) {
+                this.canvas.ontouchend = function (t) {
+                  e([t.changedTouches[0].pageX, t.changedTouches[0].pageY]),
+                    t.preventDefault();
+                };
+              }
+            },
+            {
+              key: "onTouchcancel",
+              value: function (e) {
+                this.canvas.ontouchcancel = function (t) {
+                  e([t.changedTouches[0].pageX, t.changedTouches[0].pageY]),
+                    t.preventDefault();
+                };
+              }
+            },
+            {
+              key: "onTouchmove",
+              value: function (e) {
+                this.canvas.ontouchmove = function (t) {
+                  e([t.changedTouches[0].pageX, t.changedTouches[0].pageY]),
+                    t.preventDefault();
+                };
+              }
+            },
+            {
+              key: "getRatio",
+              value: function () {
+                return [this.canvas.width / 100, this.canvas.height / 100];
+              }
+            },
+            {
+              key: "getWidth",
+              value: function () {
+                return this.canvas.width;
+              }
+            },
+            {
+              key: "getHeight",
+              value: function () {
+                return this.canvas.height;
+              }
+            }
+          ]),
+          e
+        );
+      })();
+    t.default = new s();
+  }
+]);
+
+        </script>
+    </body>
+</html>
