@@ -3,7 +3,7 @@
   const KM = (globalThis.KM = globalThis.KM || {});
   const AI = (KM.AI = {});
   const E = () => KM.Engine;
-  const SEA_ONLY = { wight: 1, man: 1, ireland: 1, calais: 1 };
+  const SEA_ONLY = new Proxy({}, { get: (t, area) => !!(KM.A[area] && (KM.A[area].flags || []).includes('island')) });
 
   function groups(s, p) { // forces by exact location
     const m = {};
@@ -49,7 +49,7 @@
   function dland(a, b) { const d = E().dist(a, b); return d === Infinity ? 60 : d; }
 
   // ----- objectives -----
-  function shipCap(s, p) { return E().playerShips(s, p).reduce((m, sh) => Math.max(m, sh.cap), 0); }
+  function shipCap(s, p) { return E().playerShips(s, p).reduce((m, sh) => m + sh.cap, 0); }
   AI.objective = function (s, p) {
     const total = E().factionStrength(s, p); const gs = groups(s, p); if (!gs.length) return null;
     const home = gs[0].area; const cap = shipCap(s, p); const out = [];
@@ -72,10 +72,12 @@
         for (const pl of KM.MAP.places) { if (!pl.cathedral) continue; const fr = E().isFriendly(s, pl.id, p); const need = fr ? 0 : pl.garrison + E().stackStrength(s, Object.values(s.nobles).filter(n => n.inside === pl.id)); const d = reach(pl.area, need); if (d === Infinity || total < need) continue; out.push({ area: pl.area, place: pl.id, kind: fr ? 'enter' : 'siege', need, value: 95 - d * 3 - need / 20, crown: true }); }
       }
     }
+    // to crown my claimant I need an Archbishop or two Bishops: take them from whoever holds them
+    const needBishops = house && !canCrownFaction(s, p);
     // weak enemies in the open
     for (const q of s.players) {
       if (q.id === p) continue;
-      for (const g of groups(s, q.id)) { if (g.inside || SEA_ONLY[g.area] || g.area === 'scotland') continue; const need = Math.ceil(g.str * 2); if (total < need) continue; const d = reach(g.area, need); if (d === Infinity) continue; out.push({ area: g.area, kind: 'battle', foe: q.id, need, value: 45 - d * 3 + g.nobles.length * 4 }); }
+      for (const g of groups(s, q.id)) { if (g.inside || SEA_ONLY[g.area] || g.area === 'scotland') continue; const need = Math.ceil(g.str * 2); if (total < need) continue; const d = reach(g.area, need); if (d === Infinity) continue; const bish = g.nobles.reduce((t, n) => t + n.bishops.length, 0); out.push({ area: g.area, kind: 'battle', foe: q.id, need, value: 45 - d * 3 + g.nobles.length * 4 + (needBishops && bish ? 50 : 0) }); }
     }
     // take a useful walled place when idle and very strong
     for (const pl of KM.MAP.places) { if (!['town', 'city'].includes(pl.type) || E().isFriendly(s, pl.id, p) || SEA_ONLY[pl.area]) continue; const need = pl.garrison + E().stackStrength(s, Object.values(s.nobles).filter(n => n.inside === pl.id)); if (total < need * 1.2) continue; const d = dland(home, pl.area); out.push({ area: pl.area, place: pl.id, kind: 'siege', need, value: 22 - d * 3 + (pl.cathedral ? 5 : 0) }); }
@@ -94,19 +96,19 @@
       return best;
     }
     // need the sea
-    const tgtSeas = KM.A[target].places.map(pl => KM.P[pl].port).filter(Boolean);
-    const sea = opt.sea.filter(o => o.fits);
-    if (sea.length && tgtSeas.length) {
+    const tgtPorts = KM.A[target].places.filter(pl => KM.P[pl].port);
+    const sea = opt.sea.filter(o => o.fits && o.canLand);
+    if (sea.length && tgtPorts.length) {
       const direct = sea.find(o => o.area === target); if (direct) return { area: target, via: 'sea', ship: direct.ship, port: direct.port };
-      let best = null, bd = Infinity; const curSea = KM.P[s.ships[sea[0].ship].port].port;
-      for (const o of sea) { if (SEA_ONLY[o.area]) continue; const d = E()._seaDist[KM.P[o.port].port][tgtSeas[0]]; if (d < bd) { bd = d; best = o; } }
-      if (best && bd < E()._seaDist[curSea][tgtSeas[0]]) return { area: best.area, via: 'sea', ship: best.ship, port: best.port };
+      const dT = E().seaDistances(tgtPorts[0], 40); let best = null, bd = Infinity;
+      for (const o of sea) { if (SEA_ONLY[o.area]) continue; const d = dT[o.port] === undefined ? 99 : dT[o.port]; if (d < bd) { bd = d; best = o; } }
+      const cur = dT[s.ships[sea[0].ship].loc]; if (best && bd < (cur === undefined ? 99 : cur)) return { area: best.area, via: 'sea', ship: best.ship, port: best.port };
       return null;
     }
     // walk to my nearest ship that can carry us
     const load = E().stackStrength(s, ids);
     let bestA = null, bd = Infinity;
-    for (const sh of E().playerShips(s, p)) { if (sh.cap < load) continue; const a = KM.P[sh.port].area; const d = E().dist(here, a); if (d < bd) { bd = d; bestA = a; } }
+    for (const sh of E().playerShips(s, p)) { if (sh.cap < load || E().shipAtSea(sh)) continue; const a = KM.P[sh.loc].area; const d = E().dist(here, a); if (d < bd) { bd = d; bestA = a; } }
     if (bestA && bestA !== here && bd !== Infinity) return stepToward(s, p, ids, bestA);
     return null;
   }
@@ -137,6 +139,7 @@
         const r = En.move(s, p, ids, dest);
         if (r.ok) return { kind: 'move', nobles: ids, dest, path: r.path };
       }
+      const fetch = fetchShip(s, p); if (fetch) return fetch;
       En.endMovement(s); return { kind: 'endMove' };
     }
     if (s.turn.phase === 'combat') {
@@ -153,14 +156,31 @@
       En.endCombat(s); return { kind: 'endCombat' };
     }
     if (s.turn.phase === 'court') {
-      for (const o of En.coronationOptions(s, p)) if (o.ok && KM.HEIR[o.heir].house === myHouse(s, p)) { const r = En.crown(s, p, o.heir); if (r.ok) return { kind: 'crown', heir: o.heir }; }
-      if (!s.turn.aiParl && En.canSummon(s, p).ok) { s.turn.aiParl = true; const r = En.openParliament(s, p); if (r.ok && s.winner === null) return { kind: 'parliament' }; if (s.winner !== null) return { kind: 'victory' }; }
+      for (const o of En.coronationOptions(s, p)) if (o.ok && (o.heir === 'beaufort' || KM.HEIR[o.heir].house === myHouse(s, p))) { const r = En.crown(s, p, o.heir); if (r.ok) return { kind: 'crown', heir: o.heir }; }
+      if (!s.turn.aiParl && En.canSummon(s, p).ok) { s.turn.aiParl = true; const cs = En.canSummon(s, p); const tg = En.summonable(s, p).map(id => s.nobles[id]).sort((a, b) => En.strength(s, a) - En.strength(s, b)).slice(0, cs.writs).map(n => n.id); const r = En.openParliament(s, p, { writs: tg }); if (r.ok && s.winner === null) return { kind: 'parliament' }; if (s.winner !== null) return { kind: 'victory' }; }
       // tuck forces into friendly walls before ending
       for (const g of groups(s, p)) { if (g.inside) continue; const fr = KM.A[g.area].places.find(pl => En.isFriendly(s, pl, p)); if (fr) { const r = En.shelter(s, p, g.nobles.map(n => n.id), fr); if (r.ok) return { kind: 'shelter', area: g.area }; } }
       const r = En.endTurn(s); return Object.assign({ kind: 'endTurn' }, r);
     }
     return null;
   };
+  // send an empty ship toward a force stranded on an island or at Calais
+  function fetchShip(s, p) {
+    const En = E();
+    const stranded = groups(s, p).filter(g => SEA_ONLY[g.area] && !En.playerShips(s, p).some(sh => !En.shipAtSea(sh) && KM.P[sh.loc].area === g.area && sh.cap >= g.str));
+    for (const g of stranded) {
+      const port = KM.A[g.area].places.find(pl => KM.P[pl].port); if (!port) continue;
+      const toPort = En.seaDistances(port, 60);
+      const ships = En.playerShips(s, p).filter(sh => !sh.used && !En.shipCargo(s, sh.key).length && sh.cap >= Math.min(g.str, sh.cap) && toPort[sh.loc] !== undefined && !(KM.P[sh.loc] && KM.P[sh.loc].area === g.area));
+      ships.sort((a, b) => toPort[a.loc] - toPort[b.loc]);
+      for (const sh of ships) {
+        const reach = En.shipReach(s, sh.key); let best = null, bd = toPort[sh.loc];
+        for (const k of Object.keys(reach)) { if (KM.P[k] && k !== port) continue; const d = toPort[k]; if (d !== undefined && d < bd) { bd = d; best = k; } }
+        if (best) { const r = En.sail(s, p, sh.key, { to: best }); if (r.ok) return { kind: 'move', nobles: [], dest: { area: En.shipArea(sh) }, path: r.path }; }
+      }
+    }
+    return null;
+  }
   function shelterIfIdle(s, p, g, obj) {
     if (g.inside || (obj && obj.area === g.area && obj.kind !== 'enter')) return null;
     const fr = KM.A[g.area].places.filter(pl => E().isFriendly(s, pl, p)); if (!fr.length) return null;

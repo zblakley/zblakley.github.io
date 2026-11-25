@@ -9,7 +9,7 @@
   const KICON = { title: 'crown', office: 'scroll', bishop: 'mitre', merc: 'pike', town: 'tower', ship: 'anchor' };
   const TYPE = { city: 'City', town: 'Walled town', open: 'Open town', royal: 'Royal castle', castle: 'Castle' };
   let S = null, viewer = 0, sel = null, mode = null, tab = 'faction', busy = false, speed = 1, newCard = null, expand = {}, opts = null, leaveHeirs = false, popFns = [];
-  const cfg = { n: 4, players: LIVERY.map((l, i) => ({ name: l[0], ai: i > 0 })), crownToWin: true, parliamentVictory: false };
+  const cfg = { n: 4, players: LIVERY.map((l, i) => ({ name: l[0], ai: i > 0 })), crownToWin: true, parliamentVictory: false, votes: true, bishopsToChancery: false };
   const store = { get() { try { return localStorage.getItem(SAVE); } catch (e) { return null; } }, set(v) { try { localStorage.setItem(SAVE, v); } catch (e) { /* storage unavailable: play on without saving */ } }, clear() { try { localStorage.removeItem(SAVE); } catch (e) { /* ignore */ } } };
   const humans = () => S.players.filter(p => !p.ai);
   const myTurn = () => S && !busy && S.winner === null && S.turn.player === viewer && !S.players[viewer].ai && S.turn.phase !== 'muster';
@@ -27,11 +27,13 @@
     let rows = '';
     for (let i = 0; i < cfg.n; i++) rows += `<div class="prow"><span class="sw" style="background:${LIVERY[i][1]}"></span><input aria-label="Faction ${i + 1} name" data-name="${i}" value="${esc(cfg.players[i].name)}" maxlength="18"><span class="seg"><button data-ai="${i}" data-v="0" aria-pressed="${!cfg.players[i].ai}">Player</button><button data-ai="${i}" data-v="1" aria-pressed="${cfg.players[i].ai}">Computer</button></span></div>`;
     $('#setup').innerHTML = `<div class="title"><h1>Kingmaker</h1>
-<p class="lede">England, 1455. Two royal houses, eight claimants, and twenty-three great families who would rather hold a king than be one.</p>
+<p class="lede">England, 1455. Two royal houses, seven claimants, and twenty-three great families who would rather hold a king than be one.</p>
 <div class="roll" aria-label="The noble houses">${roll}</div>
 <div class="setupgrid"><section><h2>Factions at the table</h2>
 <div class="stepper" style="margin-bottom:10px"><button data-n="-1" aria-label="Fewer factions">−</button><span class="num">${cfg.n}</span><button data-n="1" aria-label="More factions">+</button></div>${rows}</section>
 <section><h2>How the war is won</h2>
+<label class="opt"><input type="checkbox" data-opt="votes" ${cfg.votes ? 'checked' : ''}><span>Parliament votes on every grant<small>Optional rule: titles and offices need a majority in both Houses, bishoprics in the Lords.</small></span></label>
+<label class="opt"><input type="checkbox" data-opt="bishopsToChancery" ${cfg.bishopsToChancery ? 'checked' : ''}><span>Bishoprics return to Chancery<small>Optional rule: a dead noble's bishoprics go to Chancery instead of back into the Crown deck.</small></span></label>
 <label class="opt"><input type="checkbox" data-opt="crownToWin" ${cfg.crownToWin ? 'checked' : ''}><span>The last heir must be crowned<small>Untick to win as soon as you hold the sole surviving heir.</small></span></label>
 <label class="opt"><input type="checkbox" data-opt="parliamentVictory" ${cfg.parliamentVictory ? 'checked' : ''}><span>Allow victory in Parliament<small>Hold the only King, a majority of the Commons and the most Lords when you summon it. Makes for a shorter game.</small></span></label>
 <div class="begin"><button class="btn gilt" data-go="new">Deal the cards</button>${saved ? '<button class="btn" data-go="continue">Resume saved game</button>' : ''}<button class="btn ghost" data-go="rules">How to play</button></div></section></div></div>`;
@@ -52,7 +54,7 @@
     B.fit();
   }
   function startGame() {
-    S = E.newGame({ players: cfg.players.slice(0, cfg.n).map((p, i) => ({ name: p.name.trim() || LIVERY[i][0], ai: p.ai, color: LIVERY[i][1] })), options: { crownToWin: cfg.crownToWin, parliamentVictory: cfg.parliamentVictory } });
+    S = E.newGame({ players: cfg.players.slice(0, cfg.n).map((p, i) => ({ name: p.name.trim() || LIVERY[i][0], ai: p.ai, color: LIVERY[i][1] })), options: { crownToWin: cfg.crownToWin, parliamentVictory: cfg.parliamentVictory, votes: cfg.votes, bishopsToChancery: cfg.bishopsToChancery } });
     sel = null; mode = null; tab = 'faction'; busy = false; viewer = (humans()[0] || S.players[0]).id; enterGame(); advance();
   }
   function resume() { try { const d = JSON.parse(store.get()); S = E.deserialize(JSON.stringify(d.s)); viewer = d.viewer; } catch (e) { store.clear(); renderSetup(); return; } sel = null; mode = null; busy = false; enterGame(); advance(true); }
@@ -82,12 +84,12 @@
     $('#curtain').hidden = false; $('#curtgo').onclick = go; $('#curtgo').focus();
   }
   function musterIntro() {
-    modal(`<h2>Muster your faction</h2><p>These are the Crown cards dealt to you. Raise each noble's banner at one of his castles, then bestow your titles, offices, bishoprics, mercenaries, towns and ships on the nobles who should hold them.</p><p>A title needs an untitled noble. An office needs a titled one. What you cannot bestow goes to Chancery, to be shared out by a later Parliament.</p>`, [{ label: 'Arrange it for me', fn: () => { autoMuster(); } }, { label: 'I will do it myself', cls: 'gilt' }]);
+    modal(`<h2>Muster your faction</h2><p>These are your share of the 36 Crown cards dealt. Raise each noble's banner at one of his castles, then bestow your titles, offices, bishoprics, mercenaries, towns and ships on the nobles who should hold them. Every card dealt must be placed now; none may be kept back.</p><p>A title needs an untitled noble. An office needs a titled one. Titles and offices you cannot bestow go to Chancery, to be shared out by a later Parliament.</p>`, [{ label: 'Arrange it for me', fn: () => { autoMuster(); } }, { label: 'I will do it myself', cls: 'gilt' }]);
   }
   function autoMuster() { let g = 0; while (g++ < 60 && AI.playOne(S, viewer, true)); mode = null; render(); }
   function act(fn) { const r = fn(); if (r && r.ok === false) toast(r.error); validateSel(); render(); return r; }
   function validateSel() { if (!sel || !S) return; sel.ids = sel.ids.filter(id => S.nobles[id] && S.nobles[id].owner === viewer); if (sel.ids.length) { const f = S.nobles[sel.ids[0]]; sel.ids = sel.ids.filter(id => E.sameLoc(S.nobles[id], f)); } if (!sel.ids.length) sel = null; }
-  function selectLoc(loc) { const ns = E.noblesAt(S, loc, viewer); if (!ns.length) return; sel = { ids: ns.map(n => n.id) }; mode = null; leaveHeirs = false; hidePop(); render(); }
+  function selectLoc(loc) { loc = Object.assign({ ship: null }, loc); const ns = E.noblesAt(S, loc, viewer); if (!ns.length) return; sel = { ids: ns.map(n => n.id) }; mode = null; leaveHeirs = false; hidePop(); render(); }
 
   // ----- primary button -----
   function primary() {
@@ -118,6 +120,7 @@
       let guard = 0;
       while (S.winner === null && S.players[S.turn.player].ai && S.turn.phase !== 'muster' && guard++ < 400) {
         const p = S.turn.player; if (!humans().length) viewer = p;
+        if (S.pending && S.pending.type === 'prisoners' && !S.players[S.pending.victor].ai) { await humanPrisoners(); continue; }
         const mark = S.log.length; const a = AI.step(S); if (!a) break;
         await present(a, p, mark);
       }
@@ -135,11 +138,23 @@
       else await banner(a.type === 'siege' ? `${pl.name} besieges ${KM.P[a.place].name}` : `${pl.name} gives battle near ${E.areaName(a.area)}`, lines.slice(0, 4), '', 2400);
     }
     else if (a.kind === 'parliament') await aiParliament(p);
-    else if (a.kind === 'crown') { render(); B.ping(S.heirs[a.heir].area, '#d2a633'); await banner(lines[0] || 'A coronation', [], '', 2600); }
+    else if (a.kind === 'crown') { render(); B.ping(a.heir === 'beaufort' ? (S.nobles.beaufort || {}).area : S.heirs[a.heir].area, '#d2a633'); await banner(lines[0] || 'A coronation', [], '', 2600); }
     else if (a.kind === 'heir' || a.kind === 'prisoner') { render(); await banner(lines[0] || '', lines.slice(1), '', 1700); }
     else if (a.kind === 'card') { render(); await wait(260); }
     else if (a.kind === 'endTurn') { render(); await wait(300); }
     else render();
+  }
+  function humanPrisoners() {
+    return new Promise(res => {
+      const draw = () => {
+        const pend = S.pending && S.pending.type === 'prisoners' ? S.pending.list : [];
+        if (!pend.length) { closeModal(); render(); return res(); }
+        let h = `<h2>${pname(S.pending.victor)} holds prisoners</h2><p>The defenders carried the day. Ransom each captive (agree terms across the table) or execute him.</p>`;
+        for (const id of pend) h += `<div class="prisoner">${H.nobleShield(id, 26)}<div class="grow"><b>${full(id)}</b><br><small>${pname(S.nobles[id].owner)}</small></div><button class="btn gules small" data-fate="execute" data-id="${id}">Execute</button><button class="btn small" data-fate="release" data-id="${id}">Ransom</button></div>`;
+        modal(h, [], { onClick: t => { if (t.dataset.fate) { E.resolvePrisoner(S, t.dataset.id, t.dataset.fate); render(); draw(); } } });
+      };
+      draw();
+    });
   }
   async function aiParliament(p) {
     const props = AI.proposals(S, p); const voters = humans().filter(h => h.id !== p);
@@ -163,7 +178,7 @@
       draw();
     });
   }
-  const tally = r => ` <small>(Lords ${r.ayeL}–${r.noL}${r.lordsOnly ? '' : `, Commons ${r.ayeC}–${r.noC}`})</small>`;
+  const tally = r => !r.voted ? '' : ` <small>(Lords ${r.ayeL}–${r.noL}${r.lordsOnly ? '' : `, Commons ${r.ayeC}–${r.noC}`})</small>`;
   function votesTable() {
     let h = '<table class="votes"><tr><th>Faction</th><th class="n">Commons</th><th class="n">Lords</th></tr>';
     S.players.forEach((pl, i) => { const v = S.parl ? S.parl.votes[i] : E.votes(S, i); h += `<tr><td>${dot(i)} ${esc(pl.name)}${S.parl && S.parl.summoner === i ? ' <small>(summoner)</small>' : ''}</td><td class="n">${v.commons}</td><td class="n">${v.lords}</td></tr>`; });
@@ -184,13 +199,18 @@
   }
   function onShip(key, ev) {
     const sh = S.ships[key]; const o = E.shipOwner(S, sh);
-    if (o === viewer && myTurn() && S.turn.phase === 'move') { mode = { type: 'ship', key }; sel = null; render(); toast(sh.used ? `The ${sh.name} cannot sail again this turn.` : `Choose a port for the ${sh.name}, or select a force at ${KM.P[sh.port].name} to carry.`, 2600); return; }
-    areaInfo(KM.P[sh.port].area, ev);
+    if (o === viewer && myTurn() && S.turn.phase === 'move') {
+      const cargo = E.shipCargo(S, key);
+      if (cargo.length) return selectLoc(cargo[0]);
+      mode = { type: 'ship', key }; sel = null; render(); toast(sh.used ? `The ${sh.name} cannot sail again this turn.` : `Choose a sea square or port for the empty ${sh.name}. To carry a force, select the force instead.`, 2800); return;
+    }
+    areaInfo(E.shipArea(sh), ev);
   }
   function onPlace(pid, ev) {
     const pl = KM.P[pid];
     if (mode && mode.type === 'card' && KM.CARD[mode.card].kind === 'noble') { if (E.cardTargets(S, viewer, mode.card).includes(pid)) { const c = mode.card; mode = null; act(() => E.playCard(S, viewer, c, pid)); if (S.nobles[c]) selectLoc(S.nobles[c]); } return; }
     if (mode && mode.type === 'ship') { if (E.shipPorts(S, mode.key).includes(pid)) { const k = mode.key; mode = null; act(() => E.sailEmpty(S, viewer, k, pid)); } else toast('Too far for one voyage.'); return; }
+    if (sel && myTurn() && aboard()) { const k = aboard(); if (E.shipPorts(S, k).includes(pid)) { const fr = E.isFriendly(S, pid, viewer); return menu(ev, pl.name, [{ label: fr ? `Land and enter ${pl.name}` : E.fortified(pid) ? `Land and besiege ${pl.name}` : `Land at ${pl.name}`, fn: () => doSail(k, { to: pid, enter: fr ? pid : null }) }].concat(fr ? [{ label: 'Land in the field', alt: true, fn: () => doSail(k, { to: pid }) }] : [])); } }
     if (sel && myTurn() && opts && !opts.error) {
       const items = [];
       for (const o of opts.sea.filter(o => o.port === pid)) { const sh = S.ships[o.ship]; items.push(o.fits ? { label: `Sail here aboard the ${sh.name}` + (o.friendly ? '' : ' — to land before hostile walls'), fn: () => doMove({ area: o.area, via: 'sea', ship: o.ship, port: pid, enter: E.isFriendly(S, pid, viewer) ? pid : null }) } : { label: `The ${sh.name} carries only ${sh.cap} men`, alt: true, fn: () => {} }); }
@@ -201,7 +221,14 @@
     }
     areaInfo(pl.area, ev);
   }
+  const aboard = () => sel && S.nobles[sel.ids[0]] && S.nobles[sel.ids[0]].ship;
+  function doSail(key, o) { hidePop(); const ids = sel ? sel.ids.slice() : []; const r = act(() => E.sail(S, viewer, key, o)); if (r.ok) { B.flashPath(r.path, '#fff'); if (ids.length) { sel = { ids }; validateSel(); } render(); } }
   function onArea(aid, ev) {
+    if (E.isSea(aid) && myTurn() && S.turn.phase === 'move') {
+      if (mode && mode.type === 'ship') { const k = mode.key; if (E.shipReach(S, k)[aid] !== undefined) { mode = null; return doSail(k, { to: aid }); } }
+      if (aboard()) { const k = aboard(); if (E.shipReach(S, k)[aid] !== undefined) return doSail(k, { to: aid }); }
+      else if (sel && opts && !opts.error && opts.sea.length) { const o = opts.sea.find(x => x.fits); if (o && E.shipReach(S, o.ship)[aid] !== undefined) return doSail(o.ship, { to: aid, embark: sel.ids.slice(), fleet: o.fleet, heirs: leaveHeirs ? [] : undefined }); }
+    }
     if (mode && mode.type !== 'transfer') { mode = null; render(); }
     if (sel && myTurn()) {
       const via = reach(aid);
@@ -229,7 +256,7 @@
     const gs = {}; for (const n of E.noblesInArea(S, aid)) { const k = n.owner + '|' + (n.inside || ''); (gs[k] = gs[k] || []).push(n); }
     for (const [k, ns] of Object.entries(gs)) { const [o, ins] = k.split('|'); h += `<div class="row">${dot(+o)}<div class="grow"><b>${pname(+o)}</b> <small>${ins ? 'within ' + esc(KM.P[ins].name) : 'in the field'}</small><br><small>${ns.map(n => full(n.id) + ' ' + E.strength(S, n)).join('; ')}</small></div><b class="num">${E.stackStrength(S, ns)}</b></div>`; }
     for (const hr of E.aliveHeirs(S).filter(x => x.area === aid)) h += `<div class="row">${H.rose(KM.HEIR[hr.id].house, 18, hr.crowned)}<div class="grow">${esc(KM.HEIR[hr.id].name)}${hr.crowned ? ' <small>(crowned)</small>' : ''}<br><small>${hr.ctrl === null ? 'unescorted' + (hr.inside ? ' within ' + esc(KM.P[hr.inside].name) : '') : 'kept by ' + pname(hr.ctrl)}</small></div></div>`;
-    for (const sh of Object.values(S.ships)) if (KM.P[sh.port].area === aid && E.shipOwner(S, sh) !== null) h += `<div class="row">${H.icon('anchor', 16)}<div class="grow">${esc(sh.name)} <small>carries ${sh.cap}, at ${esc(KM.P[sh.port].name)}</small></div>${dot(E.shipOwner(S, sh))}</div>`;
+    for (const sh of Object.values(S.ships)) if (E.shipArea(sh) === aid && E.shipOwner(S, sh) !== null) h += `<div class="row">${H.icon('anchor', 16)}<div class="grow">${esc(sh.name)} <small>carries ${sh.cap}, ${KM.P[sh.loc] ? 'at ' + esc(KM.P[sh.loc].name) : 'at sea'}</small></div>${dot(E.shipOwner(S, sh))}</div>`;
     showPop(h, ev);
   }
 
@@ -271,36 +298,50 @@
     let h = `<h2>${place ? 'Besiege ' + esc(place.name) : 'Give battle near ' + esc(E.areaName(o.area))}</h2>
 <div class="sides"><div class="side-col"><h4>${dot(viewer)} ${pname(viewer)}</h4><div class="tot">${o.att}</div>${sideList(o.attackers)}</div><div class="vs">against</div>
 <div class="side-col"><h4>${o.foe !== null && o.foe !== undefined ? dot(o.foe) + ' ' + pname(o.foe) : 'The garrison'}</h4><div class="tot">${o.def}</div>${place ? `<ul><li>${H.icon('tower', 15)} Garrison of ${esc(place.name)}: ${place.garrison}</li></ul>` : ''}${sideList(o.defenders)}</div></div>`;
-    if (!o.ok) h += `<p><b>${place ? `You need at least ${o.def} men to lay siege.` : 'The weaker force cannot give battle.'}</b></p>`;
-    else h += `<p>${place ? 'A siege succeeds unless bad weather delays it.' : `You outnumber them ${(o.att / Math.max(1, o.def)).toFixed(2)} to 1. An Event card names the odds the day demands.`} Whatever the outcome, any noble named on the card dies if he is on the field.</p>
-<div class="bar" style="height:12px"><i class="w" style="width:${pct(ch.win)}"></i><i class="s" style="width:${pct(ch.stall)}"></i><i class="x" style="width:${pct(ch.weather)}"></i></div>
-<p><small>${pct(ch.win)} of battle cards give you the ${place ? 'walls' : 'victory'}${ch.stall ? ', ' + pct(ch.stall) + ' leave the day undecided' : ''}, ${pct(ch.weather)} bring bad weather.</small></p>${o.heirs.length ? `<p>${o.heirs.map(x => esc(KM.HEIR[x].name)).join(' and ')} ${o.heirs.length > 1 ? 'are' : 'is'} the prize.</p>` : ''}`;
+    if (!o.ok) h += `<p><b>${esc(o.why || 'You cannot attack here.')}</b></p>`;
+    else h += `<p>${place ? 'A siege succeeds unless bad weather delays it; the odds are ignored. If the weather turns, the place is left under siege.' : o.att >= o.def ? `You outnumber them ${(o.att / Math.max(1, o.def)).toFixed(2)} to 1. The Event card names the odds the larger side needs.` : `They outnumber you ${(o.def / Math.max(1, o.att)).toFixed(2)} to 1. If the card's odds are met, the defenders win and take your nobles prisoner.`} Every noble named on the card dies if he is on the field, whatever the result.</p>
+<div class="bar" style="height:12px"><i class="w" style="width:${pct(ch.win)}"></i><i class="s" style="width:${pct(ch.stall)}"></i><i class="l" style="width:${pct(ch.lose)}"></i><i class="x" style="width:${pct(ch.weather)}"></i></div>
+<p><small>${pct(ch.win)} of battle cards give you the ${place ? 'walls' : 'victory'}${ch.stall ? ', ' + pct(ch.stall) + ' leave the day undecided' : ''}${ch.lose ? ', ' + pct(ch.lose) + ' hand the day to the defenders' : ''}, ${pct(ch.weather)} bring bad weather.</small></p>${o.heirs.length ? `<p>${o.heirs.map(x => esc(KM.HEIR[x].name)).join(' and ')} ${o.heirs.length > 1 ? 'are' : 'is'} the prize.</p>` : ''}`;
     modal(h, [{ label: 'Hold back', cls: 'ghost' }].concat(o.ok ? [{ label: place ? 'Storm the walls' : 'Attack', cls: 'gules', keep: true, fn: () => { const r = E.attack(S, viewer, o); if (!r.ok) { closeModal(); return toast(r.error); } validateSel(); render(); showReport(r); } }] : []));
   }
   function battleReport(r, p) {
     const b = KM.EVENT[r.card].battle; const place = r.place ? KM.P[r.place] : null;
-    const head = r.outcome === 'weather' ? 'Bad weather delays the attack' : r.outcome === 'win' ? (place ? `${esc(place.name)} falls` : `Victory for ${pname(p)}`) : 'The day is undecided';
+    const head = r.outcome === 'weather' ? (place ? `${esc(place.name)} is under siege` : 'Bad weather delays the attack') : r.outcome === 'win' ? (place ? `${esc(place.name)} falls` : `Victory for ${pname(p)}`) : r.outcome === 'loss' ? `The defenders win: victory for ${pname(r.foe)}` : 'The day is undecided';
     let h = `<h2>${head}</h2><div class="evcard"><div class="fate">${b.weather ? '<b>Rain</b><span>No battle is fought. The attackers have had their chance this turn.</span>' : `<b>${esc(b.label)}</b><span>${place ? 'Sieges ignore the odds.' : 'odds needed for a victory'}</span><span>Marked for death: ${b.killed.length ? b.killed.map(nname).join(', ') : 'no one'}</span>`}</div></div>
 <div class="sides"><div class="side-col"><h4>${dot(p)} ${pname(p)}</h4><div class="tot">${r.att}</div>${sideList(r.attackers, r.killed)}</div><div class="vs">against</div><div class="side-col"><h4>${r.foe !== null && r.foe !== undefined ? dot(r.foe) + ' ' + pname(r.foe) : 'The garrison'}</h4><div class="tot">${r.def}</div>${sideList(r.defenders, r.killed)}</div></div>`;
-    if (r.heirs.length) h += `<p><b>${r.heirs.map(x => esc(KM.HEIR[x].name)).join(' and ')}</b> ${r.heirs.length > 1 ? 'pass' : 'passes'} into the keeping of ${pname(p)}.</p>`;
+    if (r.heirs.length) h += `<p><b>${r.heirs.map(x => esc(KM.HEIR[x].name)).join(' and ')}</b> ${r.heirs.length > 1 ? 'pass' : 'passes'} into the keeping of ${pname(r.victor === null || r.victor === undefined ? p : r.victor)}.</p>`;
     return h;
   }
   function showReport(r) {
     const draw = () => {
+      if (S.pending && S.pending.type === 'prisoners' && S.players[S.pending.victor].ai) { for (const id of S.pending.list.slice()) E.resolvePrisoner(S, id, 'execute'); render(); }
       let h = battleReport(r, viewer); const pend = S.pending && S.pending.type === 'prisoners' ? S.pending.list : [];
-      if (pend.length) { h += `<h3>Prisoners</h3><p><small>Their mercenaries, towns and ships are already yours. A released noble keeps his title and office.</small></p>`; for (const id of pend) h += `<div class="prisoner">${H.nobleShield(id, 26)}<div class="grow"><b>${full(id)}</b><br><small>${pname(S.nobles[id].owner)}</small></div><button class="btn gules small" data-fate="execute" data-id="${id}">Execute</button><button class="btn small" data-fate="release" data-id="${id}">Release</button></div>`; }
+      if (pend.length) { h += `<h3>Prisoners of ${pname(S.pending.victor)}</h3><p><small>Their mercenaries, towns, ships and bishoprics have already passed to the victors. A ransomed noble returns to his faction with his title and office; any noble not ransomed this turn must be executed. Agree the ransom across the table.</small></p>`; for (const id of pend) h += `<div class="prisoner">${H.nobleShield(id, 26)}<div class="grow"><b>${full(id)}</b><br><small>${pname(S.nobles[id].owner)}</small></div><button class="btn gules small" data-fate="execute" data-id="${id}">Execute</button><button class="btn small" data-fate="release" data-id="${id}">Ransom</button></div>`; }
       modal(h, pend.length ? [] : [{ label: 'Continue', cls: 'gilt', fn: () => { if (S.winner !== null) showVictory(); } }], { onClick: t => { if (t.dataset.fate) { E.resolvePrisoner(S, t.dataset.id, t.dataset.fate); validateSel(); render(); draw(); } } });
     };
     draw();
   }
 
   // ================= parliament (human summoner) =================
-  function openParliament() {
-    const r = E.openParliament(S, viewer); if (!r.ok) return toast(r.error); render(); if (S.winner !== null) return showVictory();
+  function summonDialog() {
+    const cs = E.canSummon(S, viewer); if (!cs.ok) return toast(cs.why);
+    const others = E.summonable(S, viewer).map(id => S.nobles[id]).sort((a, b) => a.owner - b.owner || E.strength(S, b) - E.strength(S, a));
+    const mine = E.playerNobles(S, viewer).filter(n => !n.ship && !E.onIsland(n) && !E.underSiege(S, n) && n.area !== KM.P[cs.venue].area);
+    const pick = { writs: [], attend: [] };
+    const draw = () => {
+      let h = `<h2>Summon Parliament to ${esc(KM.P[cs.venue].name)}</h2><p>Each Writ of Summons calls one noble of another faction to Parliament, wherever he is. Your own nobles may come too. One grant is drawn from Chancery for every noble present, so a full house shares out more of it.</p><p><b>${cs.writs - pick.writs.length}</b> of your ${cs.writs} Writs left to serve.${cs.via === 'chancellor' ? ' As Chancellor you also spend your Parliament card.' : ''}</p><h3>Serve a Writ on</h3>`;
+      h += others.map(n => `<label class="prisoner"><input type="checkbox" data-w="${n.id}" ${pick.writs.includes(n.id) ? 'checked' : ''} ${!pick.writs.includes(n.id) && pick.writs.length >= cs.writs ? 'disabled' : ''}> ${H.nobleShield(n.id, 18)} <span class="grow">${full(n.id)} <small>${pname(n.owner)}, at ${esc(E.locName(n))}</small></span></label>`).join('') || '<p>No noble of another faction can reach Parliament.</p>';
+      if (mine.length) h += `<h3>Your nobles who attend</h3>` + mine.map(n => `<label class="prisoner"><input type="checkbox" data-m="${n.id}" ${pick.attend.includes(n.id) ? 'checked' : ''}> ${H.nobleShield(n.id, 18)} <span class="grow">${full(n.id)} <small>at ${esc(E.locName(n))}</small></span></label>`).join('');
+      modal(h, [{ label: 'Not now', cls: 'ghost' }, { label: 'Summon Parliament', cls: 'gilt', fn: () => openParliament(pick) }], { wide: true, onChange: t => { const l = t.dataset.w ? pick.writs : pick.attend; const id = t.dataset.w || t.dataset.m; if (t.checked) l.push(id); else l.splice(l.indexOf(id), 1); draw(); } });
+    };
+    draw();
+  }
+  function openParliament(pick) {
+    const r = E.openParliament(S, viewer, pick); if (!r.ok) return toast(r.error); render(); if (S.winner !== null) return showVictory();
     const picks = {}, ballots = {}, results = {}; const others = humans().filter(h => h.id !== viewer);
     const draw = () => {
       if (!S.parl) return;
-      let h = `<h2>Parliament at ${esc(KM.P[S.parl.venue].name)}</h2><p>Propose a holder for each grant. Titles and offices need a majority in both Houses; bishoprics need only the Lords. Your own votes are always cast in favour. A rival who receives a grant from you will support the rest of your proposals.</p>${votesTable()}`;
+      let h = `<h2>Parliament at ${esc(KM.P[S.parl.venue].name)}</h2><p>${S.parl.attending.length} nobles attend, so ${r.parl.cards.length + Object.keys(results).length} grants come out of Chancery. A title goes to an untitled noble, an office to a titled noble without one, a bishopric to anyone.${S.options.votes ? ' Titles and offices need a majority in both Houses; bishoprics need only the Lords. Your votes are always cast in favour; a rival who receives a grant backs your other proposals.' : ''} Grants left unmade go back to the Crown deck.</p>${S.options.votes ? votesTable() : ''}`;
       for (const cid of r.parl.cards.concat(Object.keys(results).filter(c => !r.parl.cards.includes(c)))) {
         const c = KM.CARD[cid]; const done = results[cid];
         h += `<div class="bill"><div><b>${esc(c.name)}</b><br><small>${KIND[c.kind]}${c.troops ? ', ' + c.troops + ' men' : ''}${c.lords ? ', ' + c.lords + ' Lords votes' : ''}</small></div>`;
@@ -308,7 +349,7 @@
         else {
           const t = E.parlTargets(S, cid).map(id => S.nobles[id]).sort((a, b) => (a.owner === viewer ? -1 : 1) - (b.owner === viewer ? -1 : 1) || E.strength(S, b) - E.strength(S, a));
           if (!t.length) h += `<div><small>No eligible noble in the realm.</small></div><span></span>`;
-          else { if (!picks[cid] || !t.some(n => n.id === picks[cid])) picks[cid] = t[0].id; h += `<div><select data-bill="${cid}">${t.map(n => `<option value="${n.id}" ${picks[cid] === n.id ? 'selected' : ''}>${nname(n.id)} — ${pname(n.owner)}</option>`).join('')}</select>${others.map(o => ` <label><input type="checkbox" data-ballot="${cid}:${o.id}" ${ballots[cid + ':' + o.id] ? 'checked' : ''}> ${esc(o.name)} votes aye</label>`).join('')}</div><button class="btn small" data-put="${cid}">Put to the vote</button>`; }
+          else { if (!picks[cid] || !t.some(n => n.id === picks[cid])) picks[cid] = t[0].id; h += `<div><select data-bill="${cid}">${t.map(n => `<option value="${n.id}" ${picks[cid] === n.id ? 'selected' : ''}>${nname(n.id)} — ${pname(n.owner)}</option>`).join('')}</select>${S.options.votes ? '' : '<!--'}${others.map(o => ` <label><input type="checkbox" data-ballot="${cid}:${o.id}" ${ballots[cid + ':' + o.id] ? 'checked' : ''}> ${esc(o.name)} votes aye</label>`).join('')}${S.options.votes ? '' : '-->'}</div><button class="btn small" data-put="${cid}">Put to the vote</button>`; }
         }
         h += '</div>';
       }
@@ -326,17 +367,19 @@
   function computeOpts() {
     const h = {}; opts = null;
     if (mode && mode.type === 'card' && KM.CARD[mode.card].kind === 'noble') h.places = E.cardTargets(S, viewer, mode.card);
-    else if (mode && mode.type === 'ship' && S.ships[mode.key] && !S.ships[mode.key].used) { h.ports = {}; for (const p of E.shipPorts(S, mode.key)) h.ports[p] = 'ok'; }
+    else if (mode && mode.type === 'ship' && S.ships[mode.key] && !S.ships[mode.key].used) { h.ports = {}; h.areas = {}; for (const k of Object.keys(E.shipReach(S, mode.key))) { if (KM.P[k]) h.ports[k] = 'ok'; else h.areas[k] = 'sea'; } }
     if (sel) {
       h.sel = { area: S.nobles[sel.ids[0]].area };
-      if (myTurn() && S.turn.phase === 'move') { opts = E.moveOptions(S, viewer, sel.ids); if (!opts.error) { h.areas = {}; for (const k of Object.keys(opts.road)) h.areas[k] = 'road'; for (const k of Object.keys(opts.land)) h.areas[k] = 'land'; h.ports = h.ports || {}; for (const o of opts.sea) if (o.fits || !h.ports[o.port]) h.ports[o.port] = o.fits ? 'ok' : 'full'; } }
+      if (myTurn() && S.turn.phase === 'move' && aboard()) { const sh = S.ships[aboard()]; h.areas = {}; h.ports = {}; if (!sh.used || sh.free) for (const k of Object.keys(E.shipReach(S, sh.key))) { if (KM.P[k]) h.ports[k] = 'ok'; else h.areas[k] = 'sea'; } }
+      else if (myTurn() && S.turn.phase === 'move') { opts = E.moveOptions(S, viewer, sel.ids); if (!opts.error) {
+        h.areas = {}; const o = opts.sea.find(x => x.fits); if (o) for (const k of Object.keys(E.shipReach(S, o.ship))) if (!KM.P[k]) h.areas[k] = 'sea'; for (const k of Object.keys(opts.road)) h.areas[k] = 'road'; for (const k of Object.keys(opts.land)) h.areas[k] = 'land'; h.ports = h.ports || {}; for (const o of opts.sea) if (o.fits || !h.ports[o.port]) h.ports[o.port] = o.fits ? 'ok' : 'full'; } }
     }
     if (myTurn() && S.turn.phase === 'combat') { h.attacks = {}; for (const o of E.combatOptions(S, viewer)) if (o.ok) h.attacks[o.area] = true; }
     B.highlight(h);
   }
   function renderLegend() {
     const sym = (t, x) => `<svg width="22" height="26" viewBox="-11 -17 22 28">${H.placeInner(Object.assign({ type: t }, x || {}))}</svg>`;
-    $('#legend').innerHTML = `<span>${sym('city')}City, garrison 300</span><span>${sym('town')}Walled town, 200</span><span>${sym('royal')}Royal castle, 200</span><span>${sym('castle')}Noble's castle, 100</span><span>${sym('open')}Open town</span><span>${sym('town', { cathedral: true })}Cathedral</span><span><svg width="22" height="14" viewBox="-8 -7 16 14">${H.anchorInner}</svg>Port</span><span><svg width="22" height="8"><path d="M1 4h20" stroke="#c9865a" stroke-width="2.6" stroke-dasharray="6 3"/></svg>Road</span>`;
+    $('#legend').innerHTML = `<span>${sym('city')}City: garrison 300</span><span>${sym('town')}Town: 200, holds 400</span><span>${sym('royal')}Royal castle: 200, holds 300</span><span>${sym('castle')}Castle: 100, holds 300</span><span>${sym('open')}Open town</span><span>${sym('town', { cathedral: true })}Cathedral</span><span><svg width="22" height="14" viewBox="-8 -7 16 14">${H.anchorInner}</svg>Port</span><span><svg width="22" height="8"><path d="M1 4h20" stroke="#c9865a" stroke-width="2.6" stroke-dasharray="6 3"/></svg>Road</span>`;
   }
   function renderTop() {
     const t = S.turn, cur = S.players[t.player]; const steps = [['event', 'Event'], ['move', 'March'], ['combat', 'Battle'], ['court', 'Court']]; const idx = steps.findIndex(s => s[0] === t.phase);
@@ -377,7 +420,7 @@
   function hintText() {
     if (mode && mode.type === 'card') { const c = KM.CARD[mode.card]; return c.kind === 'noble' ? `Choose where ${c.name} raises his banner: his castles are ringed on the map.` : `Choose who receives ${c.name}. Eligible nobles are marked below.`; }
     if (mode && mode.type === 'transfer') return `Choose which noble in the same area takes over ${KM.CARD[mode.card].name}.`;
-    if (mode && mode.type === 'ship') return `Choose a ringed port for the ${S.ships[mode.key].name}.`;
+    if (mode && mode.type === 'ship') return `Choose a lit sea square or ringed port for the ${S.ships[mode.key].name}. A port counts as a square; five squares per voyage.`;
     if (mustering()) return S.players[viewer].hand.length ? 'Click a card in your hand, then choose where it goes.' : 'Your faction is mustered. Press “Finish muster”.';
     if (S.players[viewer].ai) return 'A computer faction. You are watching.';
     if (S.turn.player !== viewer) return `${S.players[S.turn.player].name} is taking a turn.`;
@@ -404,7 +447,7 @@
     if (!list.length) h += `<p class="hint">No noble follows you yet. ${pl.hand.some(c => KM.CARD[c].kind === 'noble') ? 'Raise one from your hand.' : 'You will draw a Crown card at the end of each turn.'}</p>`;
     for (const g of list) {
       const f = g.ns[0]; const isSel = sel && E.sameLoc(S.nobles[sel.ids[0]], f); const can = S.turn.phase === 'move' && S.turn.player === p && g.ns.some(n => E.canMove(S, n));
-      const tags = (f.inside ? '<span class="tag walls">within the walls</span>' : '<span class="tag">in the field</span>') + (S.turn.player === p && S.turn.phase === 'move' ? (g.ns.some(n => n.held) ? '<span class="tag">summoned</span>' : can ? '<span class="tag go">may march</span>' : '<span class="tag">has marched</span>') : '') + (S.turn.player === p && S.turn.phase === 'combat' && g.ns.every(n => n.fought) ? '<span class="tag">has fought</span>' : '');
+      const tags = (f.ship ? '<span class="tag">at sea aboard the ' + esc(S.ships[f.ship].name) + '</span>' : f.inside ? '<span class="tag walls">within the walls</span>' : '<span class="tag">in the field</span>') + (S.turn.player === p && S.turn.phase === 'move' ? (g.ns.some(n => n.held) ? '<span class="tag">summoned</span>' : can ? '<span class="tag go">may march</span>' : '<span class="tag">has marched</span>') : '') + (S.turn.player === p && S.turn.phase === 'combat' && g.ns.every(n => n.fought) ? '<span class="tag">has fought</span>' : '');
       h += `<section class="army ${isSel ? 'sel' : ''}"><header data-act="sel" data-area="${f.area}" data-inside="${f.inside || ''}" role="button" tabindex="0" title="Select this force and show it on the map"><span class="where">${esc(E.locName(f))}${tags}</span><span class="tot num">${g.str}</span></header>${g.ns.sort((a, b) => E.strength(S, b) - E.strength(S, a)).map(n => nobleRow(n, elig.includes(n.id))).join('')}</section>`;
     }
     // hand
@@ -413,7 +456,7 @@
       if (pl.held.length) { const fm = pl.held.filter(id => KM.EVENT[id].type === 'freeMove').length, wr = pl.held.length - fm; h += `<h3>Event cards kept</h3><div class="hand">${fm ? `<div class="card k-event"><span class="cn">Free Move${fm > 1 ? ' ×' + fm : ''}</span><span class="cv">Select a force that has marched and let it march again.</span></div>` : ''}${wr ? `<div class="card k-event"><span class="cn">Writ of Summons${wr > 1 ? ' ×' + wr : ''}</span><span class="cv">Lets the Chancellor summon Parliament when no King reigns alone.</span></div>` : ''}</div>`; }
     }
     const ships = E.playerShips(S, p);
-    if (ships.length) { h += `<h3>Ships</h3>`; for (const sh of ships) h += `<div class="shiprow">${H.icon('anchor', 16)}<div class="grow">${esc(sh.name)} <small>carries ${sh.cap}, lying at ${esc(KM.P[sh.port].name)}${sh.used ? ', spent this turn' : ''}</small></div><button class="btn small" data-act="ship" data-key="${sh.key}" ${myTurn() && S.turn.phase === 'move' && !sh.used ? '' : 'disabled'}>Sail empty</button><button class="btn small ghost" data-act="locate" data-area="${KM.P[sh.port].area}">${H.icon('eye', 14)}</button></div>`; }
+    if (ships.length) { h += `<h3>Ships</h3>`; for (const sh of ships) { const cargo = E.shipCargo(S, sh.key); h += `<div class="shiprow">${H.icon('anchor', 16)}<div class="grow">${esc(sh.name)} <small>carries ${sh.cap}, ${KM.P[sh.loc] ? 'lying at ' + esc(KM.P[sh.loc].name) : 'at sea'}${cargo.length ? ', with ' + cargo.map(n => nname(n.id)).join(', ') + ' aboard' : ''}${sh.used ? ', has sailed this turn' : ''}</small></div><button class="btn small" data-act="ship" data-key="${sh.key}" ${myTurn() && S.turn.phase === 'move' && !sh.used ? '' : 'disabled'}>${cargo.length ? 'Sail' : 'Sail empty'}</button><button class="btn small ghost" data-act="locate" data-area="${E.shipArea(sh)}" title="Show on the map">${H.icon('eye', 14)}</button></div>`; } }
     const fr = E.friendlyPlaces(S, p);
     if (fr.length) h += `<h3>Friendly walls <small>your forces may shelter here</small></h3><div class="assets">${fr.map(id => `<button class="chip move" style="border-style:solid" data-act="locate" data-area="${KM.P[id].area}">${H.icon('tower', 12)}${esc(KM.P[id].name)}</button>`).join('')}</div>`;
     return h;
@@ -427,9 +470,9 @@
       for (const k of KM.CARDS.heirs.filter(x => x.house === house)) { const hr = S.heirs[k.id]; h += `<div class="heirrow ${hr.alive ? '' : 'dead'}" ${hr.alive ? `data-act="locate" data-area="${hr.area}" role="button" tabindex="0"` : ''}>${H.rose(house, 20, hr.crowned)}<div class="grow">${esc(k.name)}${hr.alive ? `<small>${hr.crowned ? 'Crowned. ' : ''}${esc(E.locName(hr))}, ${hr.ctrl === null ? 'unescorted' : 'kept by ' + pname(hr.ctrl)}</small>` : ''}</div>${hr.alive && hr.ctrl !== null ? dot(hr.ctrl) : ''}</div>`; }
       h += '</div>';
     }
-    h += `<h3>Chancery <small>awaiting a Parliament</small></h3>${S.chancery.length ? `<div class="assets">${S.chancery.map(c => `<span class="chip fixed">${H.icon(KICON[KM.CARD[c].kind], 12)}${esc(KM.CARD[c].name)}</span>`).join('')}</div>` : '<p class="hint">Empty.</p>'}`;
-    h += `<h3>The decks</h3><p>${S.crownDeck.length} Crown cards to draw, ${S.crownDiscard.length} set aside. ${S.eventDeck.length} Event cards before the reshuffle.</p>`;
-    const dead = S.crownDiscard.filter(c => KM.CARD[c].kind === 'noble'); if (dead.length) h += `<h3>Fallen houses <small>their heirs return when the Crown deck is reshuffled</small></h3><div class="assets">${dead.map(c => `<span class="chip fixed">${H.nobleShield(c, 12)} ${nname(c)}</span>`).join('')}</div>`;
+    h += `<h3>Chancery <small>face down until Parliament</small></h3><p>${S.chancery.length ? S.chancery.length + ' title, office' + (S.options.bishopsToChancery ? ' and bishopric' : '') + ' cards wait to be granted.' : 'Empty.'}</p>`;
+    h += `<h3>The decks</h3><p>${S.crownDeck.length} Crown cards left to draw. ${S.eventDeck.length} Event cards before the reshuffle.</p>`;
+    const sieges = Object.entries(S.sieges); if (sieges.length) h += `<h3>Under siege</h3><p>${sieges.map(([pl, sg]) => `${esc(KM.P[pl].name)} by ${pname(sg.by)}`).join('; ')}.</p>`;
     return h;
   }
   function panelLog() {
@@ -451,22 +494,24 @@
       const os = E.combatOptions(S, viewer); h = `<h4>Battle</h4>`;
       if (!os.length) h += `<p>No enemy force or hostile walls share an area with your nobles.</p>`;
       for (const o of os) { const ch = E.chances(o.att, o.def, o.type === 'siege'); const i = os.indexOf(o);
-        h += `<div class="atkrow"><div>${o.type === 'siege' ? `Besiege <b>${esc(KM.P[o.place].name)}</b>` : `Attack <b>${pname(o.foe)}</b> near ${esc(E.areaName(o.area))}`} <span class="num">— ${o.att} against ${o.def}</span>${o.heirs.length ? ' <small>(' + o.heirs.map(x => esc(KM.HEIR[x].short)).join(', ') + ' within reach)</small>' : ''}${o.ok ? `<div class="bar" title="Share of battle cards: victory, undecided, bad weather"><i class="w" style="width:${ch.win * 100}%"></i><i class="s" style="width:${ch.stall * 100}%"></i><i class="x" style="width:${ch.weather * 100}%"></i></div>` : `<br><small>${o.type === 'siege' ? 'Too few men to lay siege.' : 'Too weak to give battle.'}</small>`}</div><button class="btn small ${o.ok ? 'gules' : ''}" data-act="attack" data-i="${i}">${o.ok ? 'Review' : 'Details'}</button></div>`; }
+        h += `<div class="atkrow"><div>${o.type === 'siege' ? `Besiege <b>${esc(KM.P[o.place].name)}</b>` : `Attack <b>${pname(o.foe)}</b> near ${esc(E.areaName(o.area))}`} <span class="num">— ${o.att} against ${o.def}</span>${o.heirs.length ? ' <small>(' + o.heirs.map(x => esc(KM.HEIR[x].short)).join(', ') + ' within reach)</small>' : ''}${o.ok ? `<div class="bar" title="Share of battle cards: you win, undecided, defenders win, bad weather"><i class="w" style="width:${ch.win * 100}%"></i><i class="s" style="width:${ch.stall * 100}%"></i><i class="l" style="width:${ch.lose * 100}%"></i><i class="x" style="width:${ch.weather * 100}%"></i></div>` : `<br><small>${esc(o.why || '')}</small>`}</div><button class="btn small ${o.ok ? 'gules' : ''}" data-act="attack" data-i="${i}">${o.ok ? 'Review' : 'Details'}</button></div>`; }
     }
     else if (S.turn.phase === 'court') {
       const cs = E.canSummon(S, viewer); const cor = E.coronationOptions(S, viewer);
-      h = `<h4>Court</h4><div class="acts">${cor.map(c => `<button class="btn ${c.ok ? 'gilt' : ''}" data-act="crown" data-id="${c.heir}" ${c.ok ? '' : 'disabled'}>Crown ${esc(KM.HEIR[c.heir].short)}</button>${c.ok ? '' : `<small>${esc(c.why)}</small>`}`).join('')}<button class="btn ${cs.ok ? 'gilt' : ''}" data-act="parliament" ${cs.ok ? '' : 'disabled'}>Summon Parliament</button>${cs.ok ? '' : `<small>${esc(cs.why)}</small>`}</div><p>Ending your turn draws one Crown card.</p>`;
+      const home = (S.turn.attended || []).filter(id => S.nobles[id] && S.nobles[id].owner === viewer);
+      h = `<h4>Court</h4><div class="acts">${cor.map(c => `<button class="btn ${c.ok ? 'gilt' : ''}" data-act="crown" data-id="${c.heir}" ${c.ok ? '' : 'disabled'}>Crown ${esc(c.heir === 'beaufort' ? 'Beaufort' : KM.HEIR[c.heir].short)}</button>${c.ok ? '' : `<small>${esc(c.why)}</small>`}`).join('')}<button class="btn ${cs.ok ? 'gilt' : ''}" data-act="parliament" ${cs.ok ? '' : 'disabled'}>Summon Parliament</button>${cs.ok ? '' : `<small>${esc(cs.why)}</small>`}</div>${home.length ? `<p>Return from Parliament: ${home.map(id => `<button class="btn small" data-act="home" data-id="${id}">Send ${nname(id)} home</button>`).join(' ')}</p>` : ''}<p>Ending your turn draws one Crown card.</p>`;
     }
     else if (sel) {
       const f = S.nobles[sel.ids[0]]; const here = E.noblesAt(S, f, viewer); const heirs = E.heirsAt(S, f).filter(x => x.ctrl === viewer);
       h = `<h4>${esc(E.locName(f))} <span class="num">— ${E.stackStrength(S, sel.ids)} men selected</span></h4><div class="force">${here.map(n => `<button class="fn" data-act="pick" data-id="${n.id}" aria-pressed="${sel.ids.includes(n.id)}" title="Include or leave behind">${H.nobleShield(n.id, 18)}${nname(n.id)} <b>${E.strength(S, n)}</b></button>`).join('')}${heirs.map(x => `<span class="fn" style="background:#171310;color:#efe5c9;border-color:#d2a633">${H.rose(KM.HEIR[x.id].house, 16, x.crowned)}${esc(KM.HEIR[x.id].short)}</span>`).join('')}</div>`;
       if (heirs.length && sel.ids.length < here.length) h += `<label class="key"><input type="checkbox" data-act="leaveheirs" ${leaveHeirs ? 'checked' : ''}> Leave the heir${heirs.length > 1 ? 's' : ''} with those who stay</label>`;
-      if (opts && opts.error) h += `<p>${esc(opts.error)}</p>`;
-      else if (opts) { const short = opts.sea.filter(o => !o.fits).map(o => S.ships[o.ship]); h += `<p><span class="key"><i class="k-land"></i>five areas on foot</span>${Object.keys(opts.road).length ? '<span class="key"><i class="k-road"></i>any distance by road</span>' : ''}${opts.sea.some(o => o.fits) ? '<span class="key"><i class="k-sea"></i>by ship</span>' : ''}</p>${short.length && !opts.sea.some(o => o.fits) ? `<p><small>The ${esc(short[0].name)} carries only ${short[0].cap} men: select a smaller force to embark.</small></p>` : ''}`; }
+      if (aboard()) { const sh = S.ships[aboard()]; h += `<p>Aboard the ${esc(sh.name)}${sh.used && !sh.free ? ', which has sailed this turn.' : '. Click a lit sea square to sail on, or a ringed port to land. Landing at hostile walls means besieging them in the combat phase.'}</p>`; }
+      else if (opts && opts.error) h += `<p>${esc(opts.error)}</p>`;
+      else if (opts) { const short = opts.sea.filter(o => !o.fits).map(o => ({ name: 'ships in port', cap: o.cap })); h += `<p><span class="key"><i class="k-land"></i>five areas on foot</span>${Object.keys(opts.road).length ? '<span class="key"><i class="k-road"></i>any distance by road</span>' : ''}${opts.sea.some(o => o.fits) ? '<span class="key"><i class="k-sea"></i>by ship: a port, or a sea square to stay at sea</span>' : ''}</p>${short.length && !opts.sea.some(o => o.fits) ? `<p><small>The ${esc(short[0].name)} carries only ${short[0].cap} men: select a smaller force to embark.</small></p>` : ''}`; }
       const acts = []; const en = KM.A[f.area].places.filter(pl => E.isFriendly(S, pl, viewer) && f.inside !== pl);
       for (const pl of en) acts.push(`<button class="btn small" data-act="enter" data-place="${pl}">Enter ${esc(KM.P[pl].name)}</button>`);
       if (f.inside) acts.push(`<button class="btn small" data-act="enter" data-place="">Take the field outside</button>`);
-      if (S.players[viewer].held.some(id => KM.EVENT[id].type === 'freeMove') && sel.ids.some(id => S.nobles[id].moved && !S.nobles[id].held)) acts.push(`<button class="btn small gilt" data-act="freemove">Play a Free Move</button>`);
+      if (S.players[viewer].held.some(id => KM.EVENT[id].type === 'freeMove') && sel.ids.length === 1 && S.nobles[sel.ids[0]].moved && !S.nobles[sel.ids[0]].free) acts.push(`<button class="btn small gilt" data-act="freemove">Play a Free Move</button>`);
       acts.push(`<button class="btn small ghost" data-act="clear">Deselect</button>`);
       h += `<div class="acts">${acts.join('')}</div>`;
     }
@@ -495,11 +540,12 @@
     if (a === 'leaveheirs') { leaveHeirs = t.checked; return; }
     if (a === 'enter') return act(() => E.shelter(S, viewer, sel.ids, t.dataset.place || null));
     if (a === 'freemove') return act(() => E.useFreeMove(S, viewer, sel.ids));
-    if (a === 'ship') { mode = { type: 'ship', key: t.dataset.key }; sel = null; return render(); }
+    if (a === 'ship') { const cargo = E.shipCargo(S, t.dataset.key); if (cargo.length) return selectLoc(cargo[0]); mode = { type: 'ship', key: t.dataset.key }; sel = null; return render(); }
     if (a === 'attack') return openAttack(E.combatOptions(S, viewer)[+t.dataset.i]);
     if (a === 'crown') { const r = act(() => E.crown(S, viewer, t.dataset.id)); if (r.ok) { B.ping(S.heirs[t.dataset.id].area, '#d2a633'); if (S.winner !== null) showVictory(); } return; }
     if (a === 'exec-heir') { const id = t.dataset.id; return modal(`<h2>Put ${esc(KM.HEIR[id].name)} to death?</h2><p>A dead heir cannot be crowned by anyone. This cannot be undone.</p>`, [{ label: 'Spare the heir', cls: 'ghost' }, { label: 'Execute', cls: 'gules', fn: () => { act(() => E.executeHeir(S, viewer, id)); if (S.winner !== null) showVictory(); } }]); }
-    if (a === 'parliament') return openParliament();
+    if (a === 'parliament') return summonDialog();
+    if (a === 'home') return act(() => E.returnHome(S, viewer, t.dataset.id));
   }
   document.addEventListener('click', ev => {
     const tb = ev.target.closest('#tabs button'); if (tb) { tab = tb.dataset.tab; return renderPanel(); }
@@ -517,26 +563,26 @@
   }
   function showRules() {
     modal(`<div class="rules"><h2>How to play</h2>
-<p>You lead a faction of nobles in the Wars of the Roses. Seize the royal heirs of Lancaster and York, see the rivals of your chosen claimant dead, and have the last heir standing crowned while in your keeping.</p>
+<p>You lead a faction of nobles in the Wars of the Roses. Capture the royal heirs, see the rivals of your chosen claimant dead, and have the last heir standing crowned while in your keeping.</p>
 <h3>Your turn</h3><ul>
-<li><b>Event.</b> Draw one card. Plague kills everyone inside the named walls. Raids and revolts call named office-holders and lords away to deal with them, alone and at once. An embassy drags a lone King and his escort to a port.</li>
-<li><b>March.</b> Each force moves up to five areas. Entering forest from open country ends the march. A force that starts on a road may instead follow it any distance, but not past a town or castle held by another faction. A ship at the same port can carry a force no stronger than its capacity to any port within two seas.</li>
-<li><b>Battle.</b> In an area you share with an enemy in the open, the stronger side may attack. An Event card names the odds needed: at 2 to 1 you win on a little over half the cards, at 4 to 1 on most. Nobles named on the card die if present, win or lose. Forces within walls must be besieged: match the garrison plus the nobles inside and the place falls, unless bad weather intervenes.</li>
-<li><b>Court.</b> Crown the senior living heir of a house inside a cathedral city if an escort holds an Archbishop or two Bishops. Summon Parliament to share out what lies in Chancery.</li>
-<li><b>Draw.</b> Ending your turn draws one Crown card, to play at any time in a later turn.</li></ul>
+<li><b>Event.</b> Draw one card. Plague kills everyone inside the named towns. Raids and revolts call named lords and office-holders to deal with them at once (they may still move in their turn). An embassy summons a sole King to a port. Storms drive every ship at sea into the nearest port. Writs, Free Moves and Parliament cards are kept.</li>
+<li><b>March.</b> A force moves up to five squares, diagonals included. Entering a forest ends its move. A force starting in a road square may instead ride the road any distance, stopping at the first town or castle on the road that you do not hold. Land and sea movement cannot be mixed in one move.</li>
+<li><b>Sail.</b> A ship moves up to five sea squares; a port counts as one. It embarks a force only from a friendly or unfortified port at the start of its move, carrying no more men than its capacity (ships in the same port may sail together). Ships may stay at sea. Landing at hostile walls is allowed only to besiege them.</li>
+<li><b>Battle.</b> Forces in the open in the same square may fight. Compare the two strengths as a ratio and draw an Event card: if the larger side's ratio meets the card's odds, the larger side wins, whoever attacked, and takes the losers and their heirs prisoner. Every noble named on the card dies if present.</li>
+<li><b>Siege.</b> Match the garrison plus the nobles inside and the walls fall, whatever the odds, unless bad weather leaves the place under siege. Those inside cannot leave a siege.</li>
+<li><b>Parliament.</b> The faction holding the sole King, or the Chancellor (with a Parliament card) when there are two Kings or none, may summon Parliament at a town or city. A Writ calls each noble of another faction; one grant comes out of Chancery per noble present. The King's Peace forbids fighting there until the summoner's next turn, and attendees may then ride home.</li>
+<li><b>Coronation.</b> The senior surviving heir of a house may be crowned in a cathedral if nobles there hold an Archbishop or two Bishops. There may be two Kings, one per house. Beaufort may be crowned if all of Lancaster is dead.</li>
+<li><b>Crown card.</b> End your turn by drawing one, to play then or at any time in a later turn.</li></ul>
 <h3>Your faction</h3><ul>
-<li>A noble may hold one title and, if titled, one office. These stay with him until death, then return to Chancery.</li>
-<li>Mercenaries, towns and ships (dashed chips) may pass between your nobles in the same area. Bishoprics, titles and offices may not.</li>
-<li>A noble's castles, the towns of his offices, town cards, and places you take by siege are friendly: your forces may shelter inside, safe from battle but not from plague or siege.</li>
-<li>Captured nobles lose their mercenaries, towns and ships to you. Execute them or let them go.</li></ul>
-<h3>Parliament</h3><ul>
-<li>The faction holding the only crowned monarch may summon it. With no sole King, the Chancellor of England may, by spending a Writ.</li>
-<li>Each faction votes in the Commons (the King or Chancellor 20, nobles, towns and cities) and the Lords (senior heirs 10 each, titled nobles, offices, bishops).</li></ul>
+<li>A noble may hold one title and, if titled, one office. Titles never change hands; offices only by Parliament. Both return to Chancery when he dies.</li>
+<li>Bishoprics, mercenaries, towns and ships (dashed chips) may pass to any noble in the same square. A captured noble's go to his captors.</li>
+<li>A noble's castles, the places on his cards, and places you take by siege are friendly. Each walled place holds only so many men.</li>
+<li>Captured nobles are ransomed (back to their faction with title and office) or executed in the turn of capture.</li>
+<li>You may not hold heirs of both houses for more than two rounds.</li></ul>
 <h3>Where this edition departs from the board game</h3><ul>
-<li>The map is freshly drawn from real coastlines. Areas, roads and forests follow the geography and the places named on the cards, not the printed board square for square.</li>
-<li>Ships sail from port to port and never end a turn at sea, so storms simply keep fleets in harbour for a turn.</li>
-<li>Parliament votes without moving the nobles to the meeting. Alliances, ransoms and trades between players are left to the table.</li>
-<li>Battle results are a reconstruction: the odds are distributed as in the original deck, but which nobles each card dooms is this edition's own.</li></ul></div>`, [{ label: 'Close', cls: 'gilt' }], { wide: true });
+<li>The map's squares, places, roads and ports are traced from the printed board; the artwork is redrawn. A few squares may be merged or split where the scan was hard to read.</li>
+<li>Permission to pass or enter another faction's walls, alliances and ransom terms are left to the table.</li>
+<li>Advanced-game cards and rules (Ireland, the Continent, Plantagenet dukes, French Aid, the Nobles Killed table) are not included.</li></ul></div>`, [{ label: 'Close', cls: 'gilt' }], { wide: true });
   }
 
   renderSetup();

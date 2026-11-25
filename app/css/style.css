@@ -292,3 +292,9 @@ table.votes td.n, table.votes th.n { text-align: right; font-family: Georgia, se
 .ico { vertical-align: -2px; }
 i.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 1px solid #0007; margin-right: 4px; }
 .chip.fixed small { color: #4d4130; }
+
+#board .seasq { fill: transparent; stroke: #7fa3ab; stroke-width: .9; stroke-dasharray: 3 4; }
+#board .border { fill: none; stroke: #a4232a; stroke-width: 2.4; opacity: .75; pointer-events: none; }
+#board .hl.sea { fill: #2e7fa3; fill-opacity: .22; stroke: #175b78; stroke-width: 1.6; }
+#board .shiptok.atsea { filter: drop-shadow(0 1px 1px #0008); }
+.bar .l { background: #b54848; }

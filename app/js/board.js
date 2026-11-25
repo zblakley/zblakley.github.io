@@ -18,20 +18,18 @@
 <filter id="fGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
 </defs>
 <rect x="-400" y="-400" width="${M.w + 800}" height="${M.h + 800}" fill="#a9c6c9"/><rect x="-400" y="-400" width="${M.w + 800}" height="${M.h + 800}" fill="url(#pSea)"/>
-<g class="far"><path d="${M.land.scotland}"/><path d="${M.land.ireland}"/><path d="${M.land.continent}"/><path d="${M.land.isles}"/></g>
+<g class="far"><path d="${M.land.other}"/></g><g id="lSeas">${M.seas.map(z => `<path class="seasq" data-area="${z.id}" d="${z.d}"/>`).join('')}</g>
 <path class="wash" d="${M.land.england}"/>
 <g id="lAreas">`;
     for (const a of M.areas) if (a.d) s += `<path class="area ${a.terrain} r-${a.region}" data-area="${a.id}" d="${a.d}"/>`;
     s += `</g><g class="woods">`;
     for (const a of M.areas) if (a.d && a.terrain === 'forest') s += `<path d="${a.d}" fill="url(#pWood)"/>`;
     s += `</g><path class="grain" d="${M.land.england}" filter="url(#fGrain)"/><path class="coast" d="${M.land.england}"/><g id="lRoads">`;
-    for (const r of M.roads) s += `<path class="road" d="${smooth(r.pts)}"/>`;
+    for (const r of M.roads) s += `<path class="road" d="${smooth(r.pts)}"><title>${esc(r.name)}</title></path>`;
+    for (const k of Object.keys(M.borders || {})) s += `<path class="border" d="M${M.borders[k].map(p => p.join(' ')).join('L')}"/>`;
     s += `</g><g id="lLabels">`;
-    for (const z of M.seas) s += `<text class="sea" x="${z.x}" y="${z.y}">${esc(z.name)}</text>`;
-    for (const l of M.labels) s += `<text class="${l.kind === 'land' ? 'landname' : 'realm'}" x="${l.x}" y="${l.y}" font-size="${l.size}" transform="rotate(${l.rot} ${l.x} ${l.y})">${esc(l.text)}</text>`;
+    for (const l of M.labels) s += `<text class="${l.kind === 'land' ? 'landname' : 'realm'}" x="${l.x}" y="${l.y}" font-size="${l.size}">${esc(l.text)}</text>`;
     for (const a of M.areas) if (a.name && !a.places.length && !a.special) s += `<text class="areaname" x="${a.c[0]}" y="${a.c[1] + (a.terrain === 'forest' ? 3 : 3)}">${esc(a.name)}</text>`;
-    // off-map boxes
-    for (const id of ['ireland', 'calais', 'scotland']) { const a = KM.A[id]; s += `<g class="box" data-area="${id}"><circle class="area boxarea" data-area="${id}" cx="${a.c[0]}" cy="${a.c[1]}" r="${id === 'scotland' ? 46 : 40}"/>${id === 'scotland' ? `<text class="areaname" x="${a.c[0]}" y="${a.c[1] + 30}">refuge beyond the border</text>` : ''}</g>`; }
     s += `</g><g id="lHi"></g><g id="lPlaces">`;
     for (const p of M.places) {
       const below = p.type === 'city' ? 31 : 25; const lord = p.type === 'castle' ? KM.CARDS.nobles.find(n => n.castles.includes(p.id)) : null;
@@ -104,8 +102,8 @@
     }
     // gather forces
     const groups = {};
-    for (const n of Object.values(s.nobles)) { const k = n.area + '|' + (n.inside || '') + '|' + n.owner; (groups[k] = groups[k] || { area: n.area, inside: n.inside, owner: n.owner, nobles: [], heirs: [] }).nobles.push(n); }
-    for (const h of En.aliveHeirs(s)) { const k = h.area + '|' + (h.inside || '') + '|' + (h.ctrl === null ? 'x' : h.ctrl); (groups[k] = groups[k] || { area: h.area, inside: h.inside, owner: h.ctrl, nobles: [], heirs: [] }).heirs.push(h); }
+    for (const n of Object.values(s.nobles)) { const k = n.area + '|' + (n.inside || '') + '|' + n.owner + '|' + (n.ship || ''); (groups[k] = groups[k] || { area: n.area, inside: n.inside, ship: n.ship || null, owner: n.owner, nobles: [], heirs: [] }).nobles.push(n); }
+    for (const h of En.aliveHeirs(s)) { const k = h.area + '|' + (h.inside || '') + '|' + (h.ctrl === null ? 'x' : h.ctrl) + '|' + (h.ship || ''); (groups[k] = groups[k] || { area: h.area, inside: h.inside, ship: h.ship || null, owner: h.ctrl, nobles: [], heirs: [] }).heirs.push(h); }
     const byArea = {}; for (const g of Object.values(groups)) (byArea[g.area] = byArea[g.area] || []).push(g);
     const cur = s.turn.player, phase = s.turn.phase;
     for (const [aid, gs] of Object.entries(byArea)) {
@@ -118,12 +116,17 @@
       for (const g of gs) out += token(s, g, viewer, cur, phase);
     }
     // ships in harbour
-    const perPort = {};
-    for (const sh of Object.values(s.ships)) { const o = En.shipOwner(s, sh); if (o === null) continue; const p = KM.P[sh.port]; const i = (perPort[sh.port] = (perPort[sh.port] || 0) + 1) - 1; out += `<g class="shiptok${sh.used ? ' used' : ''}" data-ship="${sh.key}" transform="translate(${p.x + 23 + i * 16} ${p.y + 12}) scale(1.35)"><title>${esc(sh.name)} — carries ${sh.cap} — ${esc(s.players[o].name)}</title>${H().shipInner(s.players[o].color)}</g>`; }
+    const perLoc = {};
+    for (const sh of Object.values(s.ships)) {
+      const o = En.shipOwner(s, sh); if (o === null) continue;
+      const atSea = !KM.P[sh.loc]; const base = atSea ? { x: KM.SEA[sh.loc].c[0], y: KM.SEA[sh.loc].c[1] - 34 } : { x: KM.P[sh.loc].x + 23, y: KM.P[sh.loc].y + 12 };
+      const i = (perLoc[sh.loc] = (perLoc[sh.loc] || 0) + 1) - 1; const cargo = En.shipCargo(s, sh.key);
+      out += `<g class="shiptok${sh.used ? ' used' : ''}${atSea ? ' atsea' : ''}" data-ship="${sh.key}" transform="translate(${base.x + i * 16} ${base.y}) scale(${atSea ? 1.9 : 1.35})"><title>${esc(sh.name)}: carries ${sh.cap}, ${esc(s.players[o].name)}${cargo.length ? '. Aboard: ' + esc(cargo.map(n => KM.CARD[n.id].name).join(', ')) : ''}${atSea ? ', at sea' : ', in ' + esc(KM.P[sh.loc].name)}</title>${H().shipInner(s.players[o].color)}</g>`;
+    }
     L.lPieces.innerHTML = out;
   };
   function token(s, g, viewer, cur, phase) {
-    const En = E(); const data = esc(JSON.stringify({ area: g.area, inside: g.inside || null, owner: g.owner }));
+    const En = E(); const data = esc(JSON.stringify({ area: g.area, inside: g.inside || null, ship: g.ship || null, owner: g.owner }));
     if (!g.nobles.length) { // unescorted heirs
       let o = `<g class="tok loose" data-tok="${data}" transform="translate(${g.inside ? KM.P[g.inside].x - 24 : g.x} ${g.inside ? KM.P[g.inside].y - 22 : g.y}) scale(1.45)">`;
       g.heirs.forEach((h, i) => { const hh = KM.HEIR[h.id]; o += `<g transform="translate(${-i * 13} ${-i * 3})"><title>${esc(hh.name)} — unescorted${h.crowned ? ', crowned' : ''}</title><circle r="9" class="loosebase"/><g transform="scale(.62)">${H().roseInner(hh.house, h.crowned)}</g></g>`; });
